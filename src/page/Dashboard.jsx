@@ -1,9 +1,7 @@
-import { FaPhoneVolume } from "react-icons/fa6";
-import { MdPhoneCallback } from "react-icons/md";
 import { MdOutlineCallMissedOutgoing } from "react-icons/md";
-import { FaArrowRight } from "react-icons/fa";
 import { IoIosArrowForward } from "react-icons/io";
 import { Line } from "react-chartjs-2";
+
 import {
   Chart as ChartJS,
   ArcElement,
@@ -14,8 +12,15 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+
 import { Doughnut } from "react-chartjs-2";
 import { Select } from "antd";
+import { useEffect, useState } from "react";
+import { getAllCalls } from "@/components/api/callLog";
+import CallDuration from "@/components/Dashboard/CallDuration";
+import CallSuccessRate from "@/components/Dashboard/CallSuccessRate";
+import CallDropRate from "@/components/Dashboard/CallDropRate";
+import AICall from "@/components/Dashboard/AICall";
 
 ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement);
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -29,6 +34,16 @@ ChartJS.register(
 );
 
 const Dashboard = () => {
+  const [callHistory, setCallHistory] = useState([]);
+  const [totalMinutes, setTotalMinutes] = useState(0);
+  const [successRate, setSuccessRate] = useState(0);
+  const [dropRate, setDropRate] = useState(0);
+  const [callPercentage, setCallPercentage] = useState(0);
+  const [formattedTime, setFormattedTime] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [avgSuccessRate, setAvgSuccessRate] = useState(0);
+  const [avgDropRate, setAvgDropRate] = useState(0);
+
   const options = {
     responsive: true,
     maintainAspectRatio: false,
@@ -42,92 +57,118 @@ const Dashboard = () => {
     plugins: { legend: { display: false } },
   };
 
-  const callItems = [
-    {
-      id: 1,
-      icon: <FaPhoneVolume />,
-      title: "Total Call Duration",
-      subtitle: "",
-      description: "12334 minutes",
-      callPercent: "+5.09%",
-      time: "+1.4 this week",
-      data: {
-        labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-        datasets: [
-          {
-            label: "Call Duration",
-            data: [20, 35, 30, 50, 45, 60, 40],
-            borderColor: "#22c55e",
-            borderWidth: 2,
-            pointRadius: 0,
-          },
-        ],
-      },
-    },
-    {
-      id: 2,
-      icon: <MdPhoneCallback size={20} />,
-      title: "Call Success Rate",
-      subtitle: "Avg. Success Rate: 70%",
-      description: "Meeting Booked 50",
-      callPercent: "+12.07%",
-      time: "+1.4 this week",
-      data: {
-        labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-        datasets: [
-          {
-            label: "Call Duration",
-            data: [20, 35, 70, 50, 45, 60, 40],
-            borderColor: "#22c55e",
-            borderWidth: 2,
-            pointRadius: 0,
-          },
-        ],
-      },
-    },
-    {
-      id: 3,
-      icon: <FaPhoneVolume />,
-      title: "Total AI Calls",
-      subtitle: "",
-      description: "100 Time",
-      callPercent: "+5.09%",
-      time: "-5.4 this week",
-      data: {
-        labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-        datasets: [
-          {
-            label: "Call Duration",
-            data: [20, 35, 30, 50, 45, 60, 40],
-            borderColor: "#ff5733",
-            borderWidth: 2,
-            pointRadius: 0,
-          },
-        ],
-      },
-    },
-    {
-      id: 4,
-      icon: <MdPhoneCallback size={20} />,
-      title: "Call Drop Rate",
-      subtitle: "Avg. Drop Rate: 12.9%",
-      description: "Meeting Booked 70",
-      callPercent: "+0.2%",
-      time: "-0.2 this week",
-      data: {
-        labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-        datasets: [
-          {
-            label: "Call Duration",
-            data: [10, 5, 80, 40, 45, 70, 40],
-            borderColor: "#ff5733",
-            borderWidth: 2,
-            pointRadius: 0,
-          },
-        ],
-      },
-    },
-  ];
+  const calculateTime = (totalSeconds) => {
+    const weeks = totalSeconds / (7 * 24 * 3600);
+    const days = totalSeconds / (24 * 3600);
+    const hours = totalSeconds / 3600;
+    const minutes = totalSeconds / 60;
+
+    if (weeks >= 1) return `${weeks.toFixed(2)} weeks`;
+    if (days >= 1) return `${days.toFixed(2)} days`;
+    if (hours >= 1) return `${hours.toFixed(2)} hours`;
+    return `${minutes.toFixed(2)} minutes`;
+  };
+  const calculateAverageRate = (callData, key) => {
+    const groupedByDay = {};
+    callData.forEach((call) => {
+      const date = new Date(call.startedAt).toISOString().split("T")[0];
+      if (!groupedByDay[date]) groupedByDay[date] = [];
+      groupedByDay[date].push(call);
+    });
+
+    let totalRate = 0;
+    const daysCount = Object.keys(groupedByDay).length;
+
+    for (const date in groupedByDay) {
+      const dayCalls = groupedByDay[date];
+      const relevantCalls = dayCalls.filter((call) =>
+        key === "success"
+          ? call.analysis?.successEvaluation === "true"
+          : call.endedReason === "customer-ended-call"
+      );
+
+      const rate = (relevantCalls.length / dayCalls.length) * 100;
+      totalRate += rate;
+    }
+
+    return daysCount ? (totalRate / daysCount).toFixed(2) : 0;
+  };
+  const calculateCallPercentage = (callData) => {
+    const successfulCalls = callData.filter(
+      (call) => call.analysis?.successEvaluation === "true"
+    );
+    const totalCalls = callData.length;
+    return totalCalls
+      ? ((successfulCalls.length / totalCalls) * 100).toFixed(2)
+      : 0;
+  };
+
+  useEffect(() => {
+    const fetchCalls = async () => {
+      try {
+        const userTokenRaw = localStorage.getItem("userInfo");
+        const currentEmail = userTokenRaw?.trim().toLowerCase();
+        if (!currentEmail) return;
+        const allCall = await getAllCalls();
+        const assistantCalls = allCall.filter((call) => {
+          const email =
+            call.assistantOverrides?.variableValues?.email?.toLowerCase();
+
+          return email === currentEmail;
+        });
+        const callData = assistantCalls;
+        setCallHistory(callData);
+        const totalSeconds = callData.reduce((acc, call) => {
+          const startTime = new Date(call.startedAt).getTime();
+          const endTime = new Date(call.endedAt).getTime();
+          return acc + (endTime - startTime) / 1000;
+        }, 0);
+
+        const minutes = (totalSeconds / 60).toFixed(2);
+        setTotalMinutes(minutes);
+
+        const formattedTimeValue = calculateTime(totalSeconds);
+        setFormattedTime(formattedTimeValue);
+
+        const successfulCalls = callData.filter(
+          (call) => call.analysis?.successEvaluation === "true"
+        );
+
+        const successRatePercentage = (
+          (successfulCalls.length / callData.length) *
+          100
+        ).toFixed(2);
+        setSuccessRate(successRatePercentage);
+
+        const droppedCalls = callData.filter(
+          (call) => call.endedReason === "customer-ended-call"
+        );
+
+        const dropRatePercentage = (
+          (droppedCalls.length / callData.length) *
+          100
+        ).toFixed(2);
+        setDropRate(dropRatePercentage);
+
+        // Calculate Call Percentage
+        const callPercentageValue = calculateCallPercentage(callData);
+        setCallPercentage(callPercentageValue);
+
+        // Calculate Average Success Rate and Drop Rate
+        const avgSuccess = calculateAverageRate(callData, "success");
+        const avgDrop = calculateAverageRate(callData, "drop");
+
+        setAvgSuccessRate(avgSuccess);
+        setAvgDropRate(avgDrop);
+      } catch (error) {
+        console.error("Error fetching calls:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCalls();
+  }, []);
 
   // Create a gradient fill
   const createGradient = (ctx, chartArea) => {
@@ -250,37 +291,27 @@ const Dashboard = () => {
 
   return (
     <div className="w-full flex flex-col justify-start items-start sm:gap-10 gap-4 overflow-hidden">
-      <div className="w-full grid xl:grid-cols-3 sm:grid-cols-2 grid-cols-1 md:gap-6 gap-4">
-        {callItems.map((item) => (
-          <div className="w-full rounded-lg shadow bg-white" key={item.id}>
-            <div className="w-full py-2 px-3.5 flex justify-start items-center gap-3 border-b border-[#E1E7EC]">
-              <div className="shrink-0">{item.icon}</div>
-              <div className="w-full flex flex-col">
-                <h1 className="xs:text-lg text-base text-[#161C24] font-semibold">
-                  {item.title}
-                </h1>
-                <p className="text-[#919EAB] text-xs">{item.subtitle}</p>
-              </div>
-              <IoIosArrowForward size={36} />
-            </div>
-            <div className="w-full flex p-4 flex-col justify-start items-start">
-              <h2 className="md:text-[22px] xs:text-xl text-lg text-[#161C24] font-medium">
-                {item.description}
-              </h2>
-              <div className="w-full">
-                <div className="flex justify-between items-center gap-1 text-green-500 text-[8px] font-medium">
-                  <span className="flex gap-2">
-                    {item.callPercent} <FaArrowRight size={8} />
-                  </span>
-                  <span className="text-gray-500">{item.time}</span>
-                </div>
-                <div className="w-full h-16 mt-2">
-                  <Line data={item.data} options={options} />
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
+      <div className="w-full grid xl:grid-cols-4 sm:grid-cols-2 grid-cols-1 md:gap-6 gap-4">
+        <CallDuration
+          totalMinutes={totalMinutes}
+          successRate={successRate}
+          callPercentage={callPercentage}
+          formattedTime={formattedTime}
+        />
+        <CallSuccessRate
+          avgSuccessRate={avgSuccessRate}
+          successRate={successRate}
+          callPercentage={callPercentage}
+          formattedTime={formattedTime}
+        />
+        <AICall callHistory={callHistory} />
+        <CallDropRate
+          dropRate={dropRate}
+          avgDropRate={avgDropRate}
+          successRate={successRate}
+          callPercentage={callPercentage}
+          formattedTime={formattedTime}
+        />
       </div>
       <div className="w-full flex xl:flex-row flex-col justify-between items-start sm:gap-10 gap-4">
         <div className="w-full sm:h-[600px] flex flex-col sm:gap-10 gap-4 bg-white shadow rounded-lg p-4">

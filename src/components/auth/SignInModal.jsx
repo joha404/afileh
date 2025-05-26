@@ -25,29 +25,43 @@ const SignInModal = ({ setIsSignIn, setIsSignUp }) => {
       email: data.email,
       password: data.password,
     };
+
     try {
       setLoading(true);
-      await SignInUser(payload);
+      const response = await SignInUser(payload);
+      console.log(response);
 
-      setLoading(false);
+      const { access_token, refresh_token } = response.data.data;
+      localStorage.setItem("access_token", access_token);
+      localStorage.setItem("refresh_token", refresh_token);
+      localStorage.setItem("userInfo", payload.email);
+
       setIsSignIn(false);
       setIsSignUp(false);
       Swal.fire({
-        title: "Log in Success",
+        title: "Login Successful",
         icon: "success",
-        draggable: true,
+        timer: 1500,
+        showConfirmButton: false,
       });
-      // reset();
+
+      // window.location.reload();
     } catch (error) {
-      console.log(error);
+      console.error("Login failed:", error?.response?.data || error.message);
+      Swal.fire({
+        title: "Login Failed",
+        text: error?.response?.data?.message || "Please try again",
+        icon: "error",
+      });
+    } finally {
       setLoading(false);
     }
-    setLoading(false);
   };
+
   return (
     <CommonModalWrapper
       title="Sign In"
-      subtitle="Welcome Back, Please Enter your Details to sing in"
+      subtitle="Welcome Back, Please Enter your Details to sign in"
       className="xl:px-24 md:px-12 xl:py-14 md:py-10"
     >
       <div className="w-full flex flex-col gap-7 justify-start items-center sm:mb-4 sm:mt-10 mt-4">
@@ -94,18 +108,15 @@ const SignInModal = ({ setIsSignIn, setIsSignUp }) => {
               />
               <span>Remember me</span>
             </label>
-            <p
-              // onClick={handleForgetPasswordOpen}
-              className="2xs:self-end cursor-pointer xs:text-lg text-base text-[#FFF] font-medium"
-            >
-              {" "}
-              Forgot password ?{" "}
+            <p className="2xs:self-end cursor-pointer xs:text-lg text-base text-[#FFF] font-medium">
+              Forgot password?
             </p>
           </div>
           <CommonSubmitBtn className="sm:mt-7 mt-4">
-            {loading ? <PulseLoader size={12} /> : " Sign In "}
+            {loading ? <PulseLoader size={12} /> : "Sign In"}
           </CommonSubmitBtn>
         </form>
+
         <p className="sm:text-xl xs:text-lg text-base">
           Don’t have an account?{" "}
           <b
@@ -115,8 +126,6 @@ const SignInModal = ({ setIsSignIn, setIsSignUp }) => {
             Sign Up
           </b>
         </p>
-        {/* <p className="text-xl font-medium text-[#5A5C5F]">Or</p>
-                <div></div> */}
       </div>
     </CommonModalWrapper>
   );
