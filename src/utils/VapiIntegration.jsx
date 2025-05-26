@@ -8,10 +8,8 @@ import { getAllCalls } from "../components/api/callLog"; // Adjust the import pa
 const vapi = new Vapi("ca3070ad-eee9-44a7-98ea-6bdca72d8b86");
 
 const VapiIntegration = ({
-  setCallOpen,
   onClose,
-  handleCallEnd,
-  assistantInfo,
+  assistantInfo = { name: "Vapi" }, // Default to "Vapi" if no assistantInfo is passed
 }) => {
   const [connecting, setConnecting] = useState(false);
   const [connected, setConnected] = useState(true);
@@ -22,8 +20,7 @@ const VapiIntegration = ({
   const [assistantIsSpeaking, setAssistantIsSpeaking] = useState(false);
   const [volumeLevel, setVolumeLevel] = useState(0);
 
-  const { showPublicKeyInvalidMessage, setShowPublicKeyInvalidMessage } =
-    usePublicKeyInvalid();
+  // Get User Token from localStorage
   const getUserToken = () => {
     try {
       const tokenString = localStorage.getItem("userInfo");
@@ -39,13 +36,11 @@ const VapiIntegration = ({
     vapi.on("call-start", () => {
       setConnecting(true);
       setConnected(false);
-      setShowPublicKeyInvalidMessage(false);
     });
 
     vapi.on("call-end", () => {
       setConnecting(true);
       setConnected(true);
-      setShowPublicKeyInvalidMessage(false);
     });
 
     vapi.on("speech-start", () => {
@@ -65,72 +60,6 @@ const VapiIntegration = ({
       setConnecting(false);
       setError(error.msg || "An error occurred");
     });
-  }, []);
-
-  let callStartTime = null;
-
-  const listeners = {
-    onCallStart: (call) => {
-      setConnecting(false);
-      setConnected(true);
-      setShowPublicKeyInvalidMessage(false);
-
-      callStartTime = new Date();
-      setCallId(call.id);
-
-      const event = {
-        event: "Call started",
-        timestamp: callStartTime.toISOString(),
-        callId: call.id,
-      };
-
-      setCallHistory((prevHistory) => [...prevHistory, event]);
-    },
-
-    onCallEnd: async (reason) => {
-      setConnecting(false);
-      setConnected(false);
-      setShowPublicKeyInvalidMessage(false);
-
-      const endTime = new Date();
-      const duration = (endTime - callStartTime) / 1000;
-
-      setCallHistory((prevHistory) => [
-        ...prevHistory,
-        {
-          event: "Call ended",
-          timestamp: endTime.toISOString(),
-          duration: `${duration} seconds`,
-          reason: reason?.msg || "Unknown",
-        },
-      ]);
-    },
-
-    onError: (err) => {
-      console.error("Error occurred:", err);
-      setError(err.msg || "An error occurred");
-    },
-  };
-
-  useEffect(() => {
-    if (vapi) {
-      Object.entries(listeners).forEach(([event, handler]) => {
-        vapi.on(event, handler);
-      });
-
-      return () => {
-        Object.entries(listeners).forEach(([event, handler]) => {
-          vapi.off(event, handler);
-        });
-      };
-    }
-  }, [listeners]);
-  const fetchAllCalls = async () => {
-    const data = await getAllCalls();
-  };
-
-  useEffect(() => {
-    fetchAllCalls();
   }, []);
 
   const startCall = async () => {
@@ -161,7 +90,7 @@ const VapiIntegration = ({
             provider: "playht",
             voiceId: "jennifer",
           },
-          name: assistantInfo.name,
+          name: assistantInfo.name, // Uses the default "Vapi" if not provided
         },
         {
           variableValues: {
@@ -187,12 +116,11 @@ const VapiIntegration = ({
       setConnected(true);
     } catch (err) {
       setError("Failed to stop call: " + err.message);
-      console.error("Error fetching call details after end:", err.message);
     }
   };
 
   return (
-    <div className="mx-auto  w-full rounded-xl">
+    <div className="mx-auto w-full rounded-xl">
       <div
         className="float-end hover:text-emerald-950 hover:font-extrabold text-2xl cursor-pointer"
         onClick={onClose}
@@ -203,10 +131,6 @@ const VapiIntegration = ({
       <h2 className="text-2xl font-semibold mb-4">Vapi Integration</h2>
 
       {error && <p className="text-red-500 mb-4">{`Error: ${error}`}</p>}
-
-      {showPublicKeyInvalidMessage && (
-        <p className="text-red-500 mb-4">Public Key is invalid or missing.</p>
-      )}
 
       <div className="flex flex-col gap-4">
         {connected ? (
@@ -227,22 +151,6 @@ const VapiIntegration = ({
       </div>
     </div>
   );
-};
-
-const usePublicKeyInvalid = () => {
-  const [showPublicKeyInvalidMessage, setShowPublicKeyInvalidMessage] =
-    useState(false);
-
-  useEffect(() => {
-    if (showPublicKeyInvalidMessage) {
-      const timer = setTimeout(() => {
-        setShowPublicKeyInvalidMessage(false);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [showPublicKeyInvalidMessage]);
-
-  return { showPublicKeyInvalidMessage, setShowPublicKeyInvalidMessage };
 };
 
 export default VapiIntegration;

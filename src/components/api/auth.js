@@ -50,7 +50,21 @@ export const SignInUser = async (data) => {
   }
 };
 
-export const GetSingleUser = async (currentEmail) => {
+export const GetSingleUser = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/user`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    // console.log("===================", response.data.data);
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching single user:", error);
+    throw error;
+  }
+};
+export const GetOneUser = async (currentEmail) => {
   try {
     const response = await axios.get(
       `${API_BASE_URL}/user/single/?email=${encodeURIComponent(currentEmail)}`,
@@ -60,7 +74,7 @@ export const GetSingleUser = async (currentEmail) => {
         },
       }
     );
-    console.log("===================", response.data.data);
+    // console.log("===================", response.data.data);
     return response.data.data;
   } catch (error) {
     console.error("Error fetching single user:", error);

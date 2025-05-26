@@ -2,16 +2,26 @@ const LeaderBoardCard = ({ userInfo = {} }) => {
   const { id, position = 0, img = "", name = "Unknown", mark = 0 } = userInfo;
 
   // Define background color based on position
+  const positionColors = {
+    "1st": "bg-[#FFF2CC]",
+    "2nd": "bg-[#E5FFEE]",
+    "3rd": "bg-[#DAE4FF]",
+    "4th": "bg-[#F0F8FF]",
+    "5th": "bg-[#F5F5DC]",
+    "6th": "bg-[#E6E6FA]",
+    "7th": "bg-[#FFE4E1]",
+    "8th": "bg-[#FDF5E6]",
+    "9th": "bg-[#FFF0F5]",
+    "10th": "bg-[#F0FFF0]",
+    "11th": "bg-[#FFE8DB]",
+    "12th": "bg-[#F0FFFF]",
+    "13th": "bg-[#FFFACD]",
+    "14th": "bg-[#FAFAD2]",
+    "15th": "bg-[#E0FFFF]",
+  };
+
   const bgColor =
-    position === "1st"
-      ? "bg-[#FFF2CC]"
-      : position === "2nd"
-      ? "bg-[#E5FFEE]"
-      : position === "3rd"
-      ? "bg-[#DAE4FF]"
-      : position === "11th"
-      ? "bg-[#FFE8DB]"
-      : "bg-[#FFFFFF] border-[1px] border-[#EEF2F5]";
+    positionColors[position] || "bg-[#FFFFFF] border-[1px] border-[#EEF2F5]";
 
   return (
     <div
