@@ -45,7 +45,7 @@ const SignInModal = ({ setIsSignIn, setIsSignUp }) => {
         showConfirmButton: false,
       });
 
-      // window.location.reload();
+      window.location.reload();
     } catch (error) {
       console.error("Login failed:", error?.response?.data || error.message);
       Swal.fire({

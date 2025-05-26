@@ -3,9 +3,9 @@ const LeaderBoardCard = ({ userInfo = {} }) => {
 
   // Define background color based on position
   const positionColors = {
-    "1st": "bg-[#FFF2CC]",
-    "2nd": "bg-[#E5FFEE]",
-    "3rd": "bg-[#DAE4FF]",
+    "1st": "bg-[#DAE4FF]",
+    "2nd": "bg-[#FFF2CC]",
+    "3rd": "bg-[#E5FFEE]",
     "4th": "bg-[#F0F8FF]",
     "5th": "bg-[#F5F5DC]",
     "6th": "bg-[#E6E6FA]",

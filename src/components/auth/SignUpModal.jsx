@@ -51,6 +51,8 @@ const SignUpModal = ({ setIsSignIn, setIsSignUp }) => {
     setLoading(true);
     try {
       const response = await SignUpUser(payload);
+      console.log(payload);
+      console.log(response);
       setIsSignIn(true);
       setIsSignUp(false);
       reset();

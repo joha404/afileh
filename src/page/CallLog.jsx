@@ -95,7 +95,7 @@ const CallLog = () => {
             </thead>
             <tbody className="bg-white">
               {[...Array(5)].map((_, index) => (
-                <tr key={index} className="border-b">
+                <tr key={index} className="border-b border-gray-300">
                   <td className="px-6 py-4">
                     <div className="h-4 bg-gray-300 rounded w-34"></div>
                   </td>
@@ -138,7 +138,7 @@ const CallLog = () => {
             </thead>
             <tbody className="bg-white">
               {callLogAll?.map((item, index) => (
-                <tr key={index} className="border-b">
+                <tr key={index} className="border-b border-gray-300 ">
                   <td className="px-6 py-4">{item.type}</td>
                   <td className="px-6 py-4">
                     {item.startedAt && item.endedAt
@@ -149,7 +149,8 @@ const CallLog = () => {
                     {new Date(item.createdAt).toLocaleString()}
                   </td>
                   <td
-                    className="px-4 sm:px-6 sm:py-3 py-2 mt-4 flex cursor-pointer hover:bg-[#477a53] hover:text-white gap-3 items-center bg-[#3EC65D] w-fit rounded-lg"
+                    className="px-4 sm:px-6 sm:py-3 py-2 my-2 flex cursor-pointer
+                     hover:bg-[#477a53] hover:text-white gap-3 items-center bg-[#3EC65D] w-fit rounded-lg"
                     onClick={() => handleCallSummary(item)}
                   >
                     <TbMessage2Up />
