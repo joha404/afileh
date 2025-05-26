@@ -1,6 +1,5 @@
 import { getAllCalls } from "@/components/api/callLog";
 import { useEffect, useState } from "react";
-import { HashLoader } from "react-spinners";
 import { TbMessage2Up } from "react-icons/tb";
 import CallSummaryModal from "@/components/common/CallSummaryModal";
 
@@ -25,12 +24,36 @@ const CallLog = () => {
   const fetchCallLog = async () => {
     setLoading(true);
     setError("");
+
     try {
+      const userTokenRaw = localStorage.getItem("userInfo");
+      const currentEmail = userTokenRaw ? userTokenRaw : null;
+      if (!currentEmail) {
+        console.warn("⚠️ No currentEmail found in localStorage");
+        setCallLogAll([]);
+        setLoading(false);
+        return;
+      }
+
       const allCallLog = await getAllCalls();
-      setCallLogAll(allCallLog);
+
+      const userCalls = allCallLog.filter((call) => {
+        const email = call.assistantOverrides?.variableValues?.email
+          ?.trim()
+          .toLowerCase();
+        return email === currentEmail;
+      });
+      if (userCalls == []) {
+        setCallLogAll([]);
+      } else {
+        setCallLogAll(userCalls);
+        console.log(userCalls);
+      }
     } catch (err) {
+      console.error(err);
       setError("Failed to load call logs. Please try again.");
     }
+
     setLoading(false);
   };
 
@@ -59,47 +82,74 @@ const CallLog = () => {
     <div className="w-full bg-white rounded-lg sm:p-6 p-3 flex flex-col sm:gap-5 gap-2">
       <h1 className="sm:text-2xl text-xl font-semibold">Call Log</h1>
 
-      {loading ? (
-        <div className=" h-[70vh] w-full flex justify-center items-center py-10">
-          <HashLoader size={100} />
+      {loading && (
+        <div className="w-full overflow-x-auto rounded-t-xl custom-scrollbar">
+          <table className="w-full text-left bg-[#EEF2F5] animate-pulse">
+            <thead>
+              <tr className="bg-black text-white">
+                <th className="px-6 py-3">Call Type</th>
+                <th className="px-6 py-3">Call Duration</th>
+                <th className="px-6 py-3">Time</th>
+                <th className="px-6 py-3">Summary</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white">
+              {[...Array(5)].map((_, index) => (
+                <tr key={index} className="border-b">
+                  <td className="px-6 py-4">
+                    <div className="h-4 bg-gray-300 rounded w-34"></div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="h-4 bg-gray-300 rounded w-50"></div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="h-4 bg-gray-300 rounded w-40"></div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="h-8 bg-gray-300 rounded w-36"></div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      ) : error ? (
+      )}
+
+      {!loading && error && (
         <h1 className="text-red-500 text-center py-10">{error}</h1>
-      ) : (
+      )}
+
+      {!loading && !error && callLogAll.length === 0 && (
+        <h1 className="text-center py-10 text-lg text-gray-600">
+          No call log available
+        </h1>
+      )}
+
+      {!loading && !error && callLogAll.length > 0 && (
         <div className="w-full overflow-x-auto rounded-t-xl custom-scrollbar">
           <table className="w-full text-left bg-[#EEF2F5]">
             <thead>
               <tr className="bg-black text-white">
-                <th className="px-6 py-3 text-nowrap sm:text-xl text-sm font-medium">
-                  Call Type
-                </th>
-                <th className="px-6 py-[14px] text-nowrap sm:text-xl text-sm font-medium">
-                  Call Duration
-                </th>
-                <th className="px-6 py-[14px] text-nowrap sm:text-xl text-sm font-medium">
-                  Time
-                </th>
-                <th className="px-6 py-[14px] text-nowrap sm:text-xl text-sm font-medium">
-                  Summary
-                </th>
+                <th className="px-6 py-3">Call Type</th>
+                <th className="px-6 py-3">Call Duration</th>
+                <th className="px-6 py-3">Time</th>
+                <th className="px-6 py-3">Summary</th>
               </tr>
             </thead>
-            <tbody className="sm:text-xl text-sm  bg-white">
-              {callLogAll?.slice(0, 10).map((item, index) => (
-                <tr key={index} className="border-b border-[#EEF2F5]">
-                  <td className="text-nowrap px-4 lg:px-6 sm:py-5 py-3">
-                    {item.type}
-                  </td>
-                  <td className="text-nowrap px-4 lg:px-6 sm:py-5 py-3">
+            <tbody className="bg-white">
+              {callLogAll?.map((item, index) => (
+                <tr key={index} className="border-b">
+                  <td className="px-6 py-4">{item.type}</td>
+                  <td className="px-6 py-4">
                     {item.startedAt && item.endedAt
                       ? calculateDuration(item.startedAt, item.endedAt)
                       : "N/A"}
                   </td>
-                  <td className="text-nowrap px-4 lg:px-6 sm:py-5 py-3">
+                  <td className="px-6 py-4">
                     {new Date(item.createdAt).toLocaleString()}
                   </td>
                   <td
-                    className="px-4 sm:px-6 text-nowrap sm:py-3 py-2 mt-4 flex cursor-pointer hover:bg-[#477a53] hover:text-white gap-3 items-center bg-[#3EC65D] w-fit rounded-lg"
+                    className="px-4 sm:px-6 sm:py-3 py-2 mt-4 flex cursor-pointer hover:bg-[#477a53] hover:text-white gap-3 items-center bg-[#3EC65D] w-fit rounded-lg"
                     onClick={() => handleCallSummary(item)}
                   >
                     <TbMessage2Up />
@@ -112,7 +162,6 @@ const CallLog = () => {
         </div>
       )}
 
-      {/* Modal */}
       <CallSummaryModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

@@ -56,7 +56,9 @@ const Header = ({ isSidebarOpen, handleSidebar }) => {
     }).then((result) => {
       if (result.isConfirmed) {
         localStorage.removeItem("access_token");
-        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("userInfo");
+        localStorage.removeItem("userInfo");
         setShowDetails(false);
         setIsSignUp(true);
         setIsSignIn(false);
@@ -89,7 +91,7 @@ const Header = ({ isSidebarOpen, handleSidebar }) => {
     };
   }, []);
   return (
-    <header className="w-full flex sticky lg:p-6 p-2 bg-white top-0 z-10">
+    <header className="w-full flex sticky lg:p-6 p-2 bg-white top-0 z-50">
       <div className="w-full flex lg:gap-5 gap-3">
         <button className="2xl:hidden block" onClick={handleSidebar}>
           <MdDashboard size={40} className="text-[#3EC65D]" />

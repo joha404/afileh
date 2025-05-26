@@ -1,17 +1,8 @@
-const API_BASE_URL = "https://api.vapi.ai/call/";
+const API_BASE_URL = "https://api.vapi.ai/assistant";
 const token = "5a75e46b-15c6-4a55-b4ca-15be8210357d";
-const getAuthHeaders = () => {
-  const token = "5a75e46b-15c6-4a55-b4ca-15be8210357d";
-  if (!token) {
-    throw new Error("Authentication token not found. Please log in again.");
-  }
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
-  };
-};
-// Get all Calls
-export const getAllCalls = async () => {
+
+// Get all Assistant
+export const getAllAssistant = async () => {
   try {
     const response = await fetch(`${API_BASE_URL}`, {
       method: "GET",
@@ -20,16 +11,17 @@ export const getAllCalls = async () => {
       },
     });
     if (!response.ok) {
-      throw new Error("Failed to fetch Call Log");
+      throw new Error("Failed to fetch Assistant");
     }
     return await response.json();
   } catch (error) {
-    console.error("Error fetching Call Log:", error);
+    console.error("Error fetching Assistant:", error);
     throw error;
   }
 };
-// Get Call by ID
-export const getCallById = async (id) => {
+
+// Get Assistant by ID
+export const getAssistantById = async (id) => {
   const token = "5a75e46b-15c6-4a55-b4ca-15be8210357d";
 
   try {
@@ -41,12 +33,12 @@ export const getCallById = async (id) => {
     });
 
     if (!response.ok) {
-      throw new Error("Failed to fetch call");
+      throw new Error("Failed to fetch Assistant");
     }
 
     return await response.json();
   } catch (error) {
-    console.error("Error fetching call:", error);
+    console.error("Error fetching Assistant:", error);
     throw error;
   }
 };

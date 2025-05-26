@@ -1,6 +1,6 @@
 const LeaderBoardCard = ({ userInfo = {} }) => {
   const { id, position = 0, img = "", name = "Unknown", mark = 0 } = userInfo;
-  console.log(id);
+
   // Define background color based on position
   const bgColor =
     position === "1st"

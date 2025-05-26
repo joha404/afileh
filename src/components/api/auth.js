@@ -27,36 +27,43 @@ export const SignUpUser = async (data) => {
 
 export const SignInUser = async (data) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/login/`, data, {
+    const response = await axios.post(`${API_BASE_URL}/signin/`, data, {
       headers: {
         "Content-Type": "application/json",
       },
     });
 
-    const { access_token } = response.data.data;
+    const { access_token, refresh_token } = response.data.data || {};
 
-    if (access_token && access_token) {
+    if (access_token) {
       localStorage.setItem("access_token", access_token);
-      localStorage.setItem("access_token", access_token);
+    }
+
+    if (refresh_token) {
+      localStorage.setItem("refresh_token", refresh_token);
     }
 
     return response;
   } catch (error) {
-    console.error("Error signing up user:", error);
+    console.error("Error signing in user:", error);
     throw error;
   }
 };
-export const GetSingleUser = async () => {
+
+export const GetSingleUser = async (currentEmail) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/user/`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await axios.get(
+      `${API_BASE_URL}/user/single/?email=${encodeURIComponent(currentEmail)}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    console.log("===================", response.data.data);
     return response.data.data;
   } catch (error) {
-    console.error("Error signing up user:", error);
+    console.error("Error fetching single user:", error);
     throw error;
   }
 };

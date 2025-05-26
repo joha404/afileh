@@ -2,48 +2,38 @@ import { useEffect, useState } from "react";
 import Vapi from "@vapi-ai/web";
 import { RxCross1 } from "react-icons/rx";
 import ActiveCallDetail from "@/components/ActiveCallDetail";
-import { getAllCalls, getCallById } from "../components/api/callLog"; // Adjust the import path
+import { getAllCalls } from "../components/api/callLog"; // Adjust the import path
 
 // Initialize Vapi with your Public Key
 const vapi = new Vapi("ca3070ad-eee9-44a7-98ea-6bdca72d8b86");
 
-const VapiIntegration = ({ setCallOpen }) => {
+const VapiIntegration = ({
+  setCallOpen,
+  onClose,
+  handleCallEnd,
+  assistantInfo,
+}) => {
   const [connecting, setConnecting] = useState(false);
   const [connected, setConnected] = useState(true);
   const [error, setError] = useState("");
   const [callHistory, setCallHistory] = useState([]);
   const [callId, setCallId] = useState(null);
-  const [callDetails, setCallDetails] = useState(null);
   const [endCallButton, SetEndCallButton] = useState(false);
   const [assistantIsSpeaking, setAssistantIsSpeaking] = useState(false);
   const [volumeLevel, setVolumeLevel] = useState(0);
 
   const { showPublicKeyInvalidMessage, setShowPublicKeyInvalidMessage } =
     usePublicKeyInvalid();
-
-  const assistantOptions = {
-    name: "Financy",
-    firstMessage: "Hi, I am Vapi. How can we help you?",
-    transcriber: {
-      provider: "deepgram",
-      model: "nova-2",
-      language: "en-US",
-    },
-    voice: {
-      provider: "playht",
-      voiceId: "jennifer",
-    },
-    model: {
-      provider: "openai",
-      model: "gpt-4",
-      messages: [
-        {
-          role: "system",
-          content: "",
-        },
-      ],
-    },
+  const getUserToken = () => {
+    try {
+      const tokenString = localStorage.getItem("userInfo");
+      return tokenString ? tokenString : null;
+    } catch (error) {
+      console.error("Failed to parse userInfo:", error);
+      return null;
+    }
   };
+  const userToken = getUserToken();
 
   useEffect(() => {
     vapi.on("call-start", () => {
@@ -137,7 +127,6 @@ const VapiIntegration = ({ setCallOpen }) => {
   }, [listeners]);
   const fetchAllCalls = async () => {
     const data = await getAllCalls();
-    console.log(data);
   };
 
   useEffect(() => {
@@ -151,7 +140,36 @@ const VapiIntegration = ({ setCallOpen }) => {
     setError("");
 
     try {
-      const call = await vapi.start(assistantOptions);
+      const call = await vapi.start(
+        {
+          transcriber: {
+            provider: "deepgram",
+            model: "nova-2",
+            language: "en-US",
+          },
+          model: {
+            provider: "openai",
+            model: "gpt-3.5-turbo",
+            messages: [
+              {
+                role: "system",
+                content: "You are a helpful assistant.",
+              },
+            ],
+          },
+          voice: {
+            provider: "playht",
+            voiceId: "jennifer",
+          },
+          name: assistantInfo.name,
+        },
+        {
+          variableValues: {
+            email: userToken,
+          },
+        }
+      );
+
       if (call) {
         setCallId(call.id);
       }
@@ -173,15 +191,11 @@ const VapiIntegration = ({ setCallOpen }) => {
     }
   };
 
-  const closeCall = () => {
-    setCallOpen(false);
-  };
-
   return (
     <div className="mx-auto  w-full rounded-xl">
       <div
         className="float-end hover:text-emerald-950 hover:font-extrabold text-2xl cursor-pointer"
-        onClick={closeCall}
+        onClick={onClose}
       >
         <RxCross1 className="font-bold" />
       </div>
@@ -211,15 +225,6 @@ const VapiIntegration = ({ setCallOpen }) => {
           />
         )}
       </div>
-
-      {callDetails && (
-        <div className="mt-4 p-4 bg-gray-100 rounded-lg">
-          <h3 className="font-semibold text-lg">Call Details</h3>
-          <p>Call ID: {callDetails.id}</p>
-          <p>Status: {callDetails.status}</p>
-          <p>Timestamp: {callDetails.timestamp}</p>
-        </div>
-      )}
     </div>
   );
 };
