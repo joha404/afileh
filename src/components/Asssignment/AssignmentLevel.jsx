@@ -13,7 +13,7 @@ export default function AssignmentLevel({ assistantInfo, setLevelup }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (assistantInfo?.name) {
+    if (assistantInfo && Object.keys(assistantInfo).length > 0) {
       fetchAssistantScore();
     }
   }, [assistantInfo]);
@@ -64,10 +64,6 @@ export default function AssignmentLevel({ assistantInfo, setLevelup }) {
     const durationInSeconds = (end - start) / 1000;
 
     const totalMessages = callData.messages?.length || 0;
-
-    if (totalMessages < 1) {
-      set(setScore1(0));
-    }
     const cost = callData.cost || 0;
 
     const systemContent =
@@ -75,9 +71,9 @@ export default function AssignmentLevel({ assistantInfo, setLevelup }) {
       "";
     const contentLength = systemContent.length;
 
-    const successScore = successEvaluation ? 15 : 0;
+    const successScore = successEvaluation ? 80 : 0;
     const durationScore = Math.min((durationInSeconds / 60) * 15, 15);
-    const messageScore = Math.min(totalMessages * 1.5);
+    const messageScore = Math.min(totalMessages * 1.5, 15);
     const contentLengthScore = Math.min((contentLength / 1000) * 8.5, 8);
 
     const rawTotal =
@@ -94,6 +90,15 @@ export default function AssignmentLevel({ assistantInfo, setLevelup }) {
       contentLength,
     };
   };
+
+  // 👉 Don't render anything if assistantInfo is empty or null
+  if (!assistantInfo || Object.keys(assistantInfo).length === 0) {
+    return (
+      <div className="w-full flex justify-center items-center p-5 bg-white rounded-lg">
+        <p className="text-gray-500">No module available.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full flex flex-col bg-white sm:p-5 p-3 rounded-[8px]">
@@ -160,7 +165,7 @@ export default function AssignmentLevel({ assistantInfo, setLevelup }) {
         </div>
 
         {callOpen && (
-          <div className="fixed inset-0 z-10 bg-black/50 backdrop-blur-xs flex justify-center items-center">
+          <div className="fixed inset-0 z-10 bg-black/10 flex justify-center items-center">
             <div className="bg-white p-8 rounded-2xl sm:w-[90%] lg:w-[30%]">
               <VapiIntegration
                 onClose={handleCallClose}

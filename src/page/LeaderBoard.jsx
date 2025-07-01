@@ -85,7 +85,7 @@ const LeaderBoard = () => {
         leaderboard_img5,
       ];
 
-      const topFive = allUserScores.slice(0, 3).map((user, i) => ({
+      const topFive = allUserScores.slice(0, 4).map((user, i) => ({
         ...user,
         profile_image_url:
           userMap[user.email]?.profile_image_url ||
@@ -118,7 +118,7 @@ const LeaderBoard = () => {
         <div className="w-full border-[1px] border-[#EEF2F5]"></div>
         <div className="w-full grid xl:grid-cols-2 grid-cols-1 sm:gap-5 gap-3">
           {loading
-            ? [1, 2, 3].map((i) => <LeaderBoardSkeleton key={i} />)
+            ? [1, 2, 3, 4].map((i) => <LeaderBoardSkeleton key={i} />)
             : topThree.map((user, index) => (
                 <LeaderBoardCard
                   key={user.email}

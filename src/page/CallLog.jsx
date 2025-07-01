@@ -129,7 +129,7 @@ const CallLog = () => {
         <div className="w-full overflow-x-auto rounded-t-xl custom-scrollbar">
           <table className="w-full text-left bg-[#EEF2F5]">
             <thead>
-              <tr className="bg-black text-white">
+              <tr className="bg-[#303030] text-white">
                 <th className="px-6 py-3">Call Type</th>
                 <th className="px-6 py-3">Call Duration</th>
                 <th className="px-6 py-3">Time</th>
