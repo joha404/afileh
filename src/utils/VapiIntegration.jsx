@@ -1,26 +1,26 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Vapi from "@vapi-ai/web";
 import { RxCross1 } from "react-icons/rx";
 import ActiveCallDetail from "@/components/ActiveCallDetail";
-import { getAllCalls } from "../components/api/callLog"; // Adjust the import path
 
-// Initialize Vapi with your Public Key
 const vapi = new Vapi("ca3070ad-eee9-44a7-98ea-6bdca72d8b86");
 
 const VapiIntegration = ({
   onClose,
-  assistantInfo = { name: "Vapi" }, // Default to "Vapi" if no assistantInfo is passed
+  assistantInfo,
+  callDurationLimit = undefined,
 }) => {
   const [connecting, setConnecting] = useState(false);
   const [connected, setConnected] = useState(true);
   const [error, setError] = useState("");
-  const [callHistory, setCallHistory] = useState([]);
-  const [callId, setCallId] = useState(null);
   const [endCallButton, SetEndCallButton] = useState(false);
   const [assistantIsSpeaking, setAssistantIsSpeaking] = useState(false);
   const [volumeLevel, setVolumeLevel] = useState(0);
+  const [callTime, setCallTime] = useState(0);
 
-  // Get User Token from localStorage
+  const intervalId = useRef(null);
+  const callEndTimeout = useRef(null);
+
   const getUserToken = () => {
     try {
       const tokenString = localStorage.getItem("userInfo");
@@ -32,35 +32,60 @@ const VapiIntegration = ({
   };
   const userToken = getUserToken();
 
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60)
+      .toString()
+      .padStart(2, "0");
+    const s = Math.floor(seconds % 60)
+      .toString()
+      .padStart(2, "0");
+    return `${m}:${s}`;
+  };
+
   useEffect(() => {
     vapi.on("call-start", () => {
       setConnecting(true);
       setConnected(false);
+
+      // Start timer
+      intervalId.current = setInterval(() => {
+        setCallTime((prev) => prev + 1);
+      }, 2000);
+
+      // Auto end after callDurationLimit
+      if (callDurationLimit) {
+        callEndTimeout.current = setTimeout(() => {
+          vapi.stop();
+          SetEndCallButton(false);
+          setConnected(true);
+        }, callDurationLimit);
+      }
     });
 
     vapi.on("call-end", () => {
       setConnecting(true);
       setConnected(true);
+      SetEndCallButton(false);
+
+      if (intervalId.current) clearInterval(intervalId.current);
+      if (callEndTimeout.current) clearTimeout(callEndTimeout.current);
+      setCallTime(0);
     });
 
-    vapi.on("speech-start", () => {
-      setAssistantIsSpeaking(true);
-    });
-
-    vapi.on("speech-end", () => {
-      setAssistantIsSpeaking(false);
-    });
-
-    vapi.on("volume-level", (level) => {
-      setVolumeLevel(level);
-    });
-
+    vapi.on("speech-start", () => setAssistantIsSpeaking(true));
+    vapi.on("speech-end", () => setAssistantIsSpeaking(false));
+    vapi.on("volume-level", (level) => setVolumeLevel(level));
     vapi.on("error", (error) => {
       console.error(error);
       setConnecting(false);
       setError(error.msg || "An error occurred");
     });
-  }, []);
+
+    return () => {
+      if (intervalId.current) clearInterval(intervalId.current);
+      if (callEndTimeout.current) clearTimeout(callEndTimeout.current);
+    };
+  }, [callDurationLimit]);
 
   const startCall = async () => {
     setConnecting(true);
@@ -69,39 +94,38 @@ const VapiIntegration = ({
     setError("");
 
     try {
-      const call = await vapi.start(
-        {
-          transcriber: {
-            provider: "deepgram",
-            model: "nova-2",
-            language: "en-US",
-          },
-          model: {
-            provider: "openai",
-            model: "gpt-3.5-turbo",
-            messages: [
-              {
-                role: "system",
-                content: "You are a helpful assistant.",
-              },
-            ],
-          },
-          voice: {
-            provider: "playht",
-            voiceId: "jennifer",
-          },
-          name: assistantInfo.name, // Uses the default "Vapi" if not provided
+      const callConfig = {
+        transcriber: {
+          provider: "deepgram",
+          model: "nova-2",
+          language: "en-US",
         },
-        {
-          variableValues: {
-            email: userToken,
-          },
-        }
-      );
+        model: {
+          provider: "openai",
+          model: "gpt-3.5-turbo",
+          messages: [
+            {
+              role: "system",
+              content: "You are a helpful assistant.",
+            },
+          ],
+        },
+        voice: {
+          provider: "playht",
+          voiceId: "jennifer",
+        },
+        name: assistantInfo,
+      };
 
-      if (call) {
-        setCallId(call.id);
-      }
+      const callOptions = callDurationLimit
+        ? undefined
+        : {
+            variableValues: {
+              email: userToken || "",
+            },
+          };
+
+      await vapi.start(callConfig, callOptions);
     } catch (err) {
       setError("Failed to start call: " + err.message);
       setConnecting(false);
@@ -111,9 +135,12 @@ const VapiIntegration = ({
 
   const endCall = async () => {
     try {
-      vapi.stop();
+      vapi.stop(); // ✅ Correct method from SDK
       SetEndCallButton(false);
       setConnected(true);
+      setCallTime(0);
+      if (intervalId.current) clearInterval(intervalId.current);
+      if (callEndTimeout.current) clearTimeout(callEndTimeout.current);
     } catch (err) {
       setError("Failed to stop call: " + err.message);
     }
@@ -133,6 +160,15 @@ const VapiIntegration = ({
       {error && <p className="text-red-500 mb-4">{`Error: ${error}`}</p>}
 
       <div className="flex flex-col gap-4">
+        {!connected && (
+          <div className="text-xl font-bold text-emerald-600 text-center">
+            ⏱️ Time:{" "}
+            {callDurationLimit
+              ? formatTime(callDurationLimit / 1000 - callTime)
+              : formatTime(callTime)}
+          </div>
+        )}
+
         {connected ? (
           <button
             onClick={startCall}

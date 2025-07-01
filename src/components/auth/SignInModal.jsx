@@ -6,6 +6,7 @@ import { SignInUser } from "../api/auth";
 import { useState } from "react";
 import PulseLoader from "react-spinners/PulseLoader";
 import Swal from "sweetalert2";
+import { RxCross1 } from "react-icons/rx";
 
 const SignInModal = ({ setIsSignIn, setIsSignUp }) => {
   const [loading, setLoading] = useState(false);
@@ -64,6 +65,15 @@ const SignInModal = ({ setIsSignIn, setIsSignUp }) => {
       subtitle="Welcome Back, Please Enter your Details to sign in"
       className="xl:px-24 md:px-12 xl:py-14 md:py-10"
     >
+      <div
+        className="absolute top-6 right-6 cursor-pointer z-10"
+        onClick={() => setIsSignIn(false)}
+      >
+        <RxCross1
+          size={22}
+          className="text-gray-500 hover:text-red-500 transition"
+        />
+      </div>
       <div className="w-full flex flex-col gap-7 justify-start items-center sm:mb-4 sm:mt-10 mt-4">
         <form
           onSubmit={handleSubmit(onSubmit)}

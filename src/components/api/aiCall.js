@@ -7,7 +7,6 @@ export const CreateAiCall = async (data) => {
     const response = await axios.post(`${API_BASE_URL}/cms/ai-caller/`, data, {
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
       withCredentials: true,
     });

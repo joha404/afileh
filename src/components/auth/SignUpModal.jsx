@@ -5,7 +5,7 @@ import CommonSubmitBtn from "../common/CommonSubmitBtn";
 import { SignUpUser } from "../api/auth";
 import { useState } from "react";
 import PulseLoader from "react-spinners/PulseLoader";
-
+import { RxCross1 } from "react-icons/rx";
 const SignUpModal = ({ setIsSignIn, setIsSignUp }) => {
   const [loading, setLoading] = useState(false);
   const [selectedFileName, setSelectedFileName] = useState("");
@@ -68,6 +68,15 @@ const SignUpModal = ({ setIsSignIn, setIsSignUp }) => {
       subtitle="Please fill out the fields below"
       className="xl:px-24 md:px-12 2xl:py-14 md:py-10"
     >
+      <div
+        className="absolute top-6 right-6 cursor-pointer z-10"
+        onClick={() => setIsSignUp(false)}
+      >
+        <RxCross1
+          size={22}
+          className="text-gray-500 hover:text-red-500 transition"
+        />
+      </div>
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="w-full flex flex-col gap-3"

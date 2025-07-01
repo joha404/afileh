@@ -17,15 +17,16 @@ const Header = ({ isSidebarOpen, handleSidebar }) => {
   const popupRef = useRef(null);
   const profileImgRef = useRef(null);
   const [userDetails, setUserDetails] = useState("");
+  const [showingModal, setShowingModal] = useState(false);
 
-  const fetchUserData = () => {
-    const accessToken = localStorage.getItem("access_token");
-    if (accessToken === null) {
-      setIsSignIn(true);
-    } else {
-      setIsSignIn(false);
-    }
-  };
+  // const fetchUserData = () => {
+  //   const accessToken = localStorage.getItem("access_token");
+  //   if (accessToken === null) {
+  //     setIsSignIn(true);
+  //   } else {
+  //     setIsSignIn(false);
+  //   }
+  // };
   const fetchSingleUser = async () => {
     try {
       const singleUserData = await GetSingleUser();
@@ -35,9 +36,18 @@ const Header = ({ isSidebarOpen, handleSidebar }) => {
     }
   };
   useEffect(() => {
-    fetchUserData();
+    // fetchUserData();
     fetchSingleUser();
   }, []);
+
+  // useEffect(() => {
+  //   const accessToken = localStorage.getItem("access_token");
+  //   if (accessToken === null) {
+  //     setIsSignIn(true);
+  //   } else {
+  //     setIsSignIn(false);
+  //   }
+  // }, []);
 
   const handleProfileClick = () => {
     setShowDetails(!showDetails);
@@ -132,19 +142,40 @@ const Header = ({ isSidebarOpen, handleSidebar }) => {
         {showDetails && (
           <div
             ref={popupRef}
-            className="absolute bg-white  rounded-lg mt-30 z-[999]  shadow-lg p-2 "
+            className="absolute bg-white rounded-lg mt-30 z-[999] shadow-lg p-2"
           >
-            <div className="z-10  flex flex-col  w-27 ">
-              <a
-                onClick={handleLogout}
-                className="rounded-md px-3.5 py-2 m-1 overflow-hidden relative group cursor-pointer border-2 font-medium border-[#eef2f5] text-[#eef2f5] text-white"
-              >
-                <span className="absolute w-64 h-0 transition-all duration-300 origin-center rotate-45 -translate-x-20 bg-[#eef2f5] top-1/2 group-hover:h-64 group-hover:-translate-y-32 ease"></span>
-                <span className="relative flex justify-between items-center text-[#328E6E] transition duration-300 group-hover:text-black ease">
-                  <p className="text-[12px]">Log Out</p>{" "}
-                  <FaSignOutAlt size={12} />
-                </span>
-              </a>
+            <div className="z-10 flex flex-col w-32">
+              {localStorage.getItem("access_token") ? (
+                <button
+                  onClick={handleLogout}
+                  className="rounded-md px-3.5 py-2 m-1 overflow-hidden relative group cursor-pointer border-2 font-medium border-[#eef2f5] text-[#328E6E] hover:bg-[#eef2f5]"
+                >
+                  <span className="relative flex justify-between items-center text-sm">
+                    Log Out <FaSignOutAlt className="ml-2" size={12} />
+                  </span>
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={() => {
+                      setIsSignIn(true);
+                      setShowDetails(false);
+                    }}
+                    className="rounded-md px-3.5 py-2 m-1 text-sm text-[#328E6E] hover:bg-[#eef2f5] border border-[#eef2f5]"
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsSignUp(true);
+                      setShowDetails(false);
+                    }}
+                    className="rounded-md px-3.5 py-2 m-1 text-sm text-[#328E6E] hover:bg-[#eef2f5] border border-[#eef2f5]"
+                  >
+                    Sign Up
+                  </button>
+                </>
+              )}
             </div>
           </div>
         )}
