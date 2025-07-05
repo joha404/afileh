@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
 import padLock from "../assets/images/padLock.png";
-import { getAllCalls } from "@/components/api/callLog";
 import AssignmentLevel from "@/components/Asssignment/AssignmentLevel";
-import { getAssistantById } from "@/components/api/assistant";
-import Swal from "sweetalert2";
+import { getAllAssignment } from "@/components/api/assignment";
 
 const SkeletonCard = () => (
   <div className="w-full flex flex-col gap-5 justify-start items-start rounded-xl sm:p-5 p-3 bg-[#EEF2F5] animate-pulse">
@@ -25,131 +23,35 @@ const SkeletonCard = () => (
 );
 
 const Assignment = () => {
-  const [callLogAll, setCallLogAll] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [assistantInfo, setAssistantInfo] = useState([]);
+  const [levelup1, setLevelup1] = useState(false);
+  const [levelup2, setLevelup2] = useState(false);
+  const [levelup3, setLevelup3] = useState(false);
+  const [levelup4, setLevelup4] = useState(false);
+  const [levelup5, setLevelup5] = useState(false);
+  const [levelup6, setLevelup6] = useState(false);
 
-  const [assistantList, setAssistantList] = useState(null);
-  const [assistantList2, setAssistantList2] = useState(null);
-
-  const [isLevelup1, setLevelup1] = useState(0);
-  const [isLevelup2, setLevelup2] = useState(0);
-  const [isLevelup3, setLevelup3] = useState(0);
-  const [isLevelup4, setLevelup4] = useState(0);
-  const [isLevelup5, setLevelup5] = useState(0);
-  const [isLevelup6, setLevelup6] = useState(0);
-
-  const [assistantIds, setAssistantIds] = useState([
-    "bc79f469-6e0f-4f02-bfdc-86647aebc955",
-    "30029f61-2307-44a9-9ed9-cc091045fb97",
-    "50ed1ab8-8544-4622-9ea0-7902a788fdb6",
-  ]);
-
-  const [assistantIds2, setAssistantIds2] = useState([
-    "e696043a-4f9f-4f70-903f-4581bc267ed3",
-    "b50c3418-0da0-4e5b-8f69-c4d792a66a11",
-    "7386de9d-5e8f-40c9-9977-cafa1a9a7728",
-    "cb1a980c-73be-4aeb-a051-e61d40262a00",
-  ]);
-
-  // Fetch Module 1 assistants
-  useEffect(() => {
-    const fetchAssistants = async () => {
-      try {
-        const data = await Promise.all(
-          assistantIds.map((id) => getAssistantById(id))
-        );
-        setAssistantList(data);
-      } catch (error) {
-        console.error("Error fetching assistants:", error);
-      }
-    };
-
-    fetchAssistants();
-  }, [assistantIds]);
-
-  // Fetch Module 2 assistants
-  useEffect(() => {
-    const fetchAssistants2 = async () => {
-      try {
-        const data = await Promise.all(
-          assistantIds2.map((id) => getAssistantById(id))
-        );
-        setAssistantList2(data);
-      } catch (error) {
-        console.error("Error fetching assistants for Module 2:", error);
-      }
-    };
-
-    if (assistantIds2.length > 0) {
-      fetchAssistants2();
+  const fetchAssignment = async () => {
+    try {
+      const res = await getAllAssignment();
+      setAssistantInfo(res.data);
+    } catch (error) {
+      console.error("Error fetching assignments:", error);
     }
-  }, [assistantIds2]);
+  };
 
-  // Fetch call logs
   useEffect(() => {
-    const fetchCallLog = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const allCallLog = await getAllCalls();
-        setCallLogAll(Array.isArray(allCallLog) ? allCallLog : []);
-      } catch (err) {
-        setError("Failed to load call logs. Please try again.");
-      }
-      setLoading(false);
-    };
-
-    fetchCallLog();
+    fetchAssignment();
   }, []);
 
-  useEffect(() => {
-    const updatedIds = [...assistantIds];
-    const updatedIds2 = [...assistantIds2];
-    let changed = false;
-
-    const levelUps = [
-      { score: isLevelup1, index: 0 },
-      { score: isLevelup2, index: 1 },
-      { score: isLevelup3, index: 2 },
-    ];
-
-    const promotedIndices = new Set();
-
-    for (let { score, index } of levelUps) {
-      if (score > 99 && !promotedIndices.has(index)) {
-        if (updatedIds2.length > 0) {
-          updatedIds.splice(index, 1);
-          const newAssistant = updatedIds2.shift();
-          updatedIds.splice(index, 0, newAssistant);
-          promotedIndices.add(index);
-          changed = true;
-
-          Swal.fire({
-            title: "Level Up!",
-            text: "New assistant promoted.",
-            icon: "success",
-          });
-        }
-      }
-    }
-
-    if (changed) {
-      setAssistantIds(updatedIds);
-      setAssistantIds2(updatedIds2);
-
-      // Reset all levelup values temporarily to ensure re-fetch of scores
-      if (promotedIndices.has(0)) setLevelup1(0);
-      if (promotedIndices.has(1)) setLevelup2(0);
-      if (promotedIndices.has(2)) setLevelup3(0);
-    }
-  }, [isLevelup1, isLevelup2, isLevelup3]);
+  const module1 = assistantInfo.slice(0, 3);
+  const module2 = assistantInfo.slice(3, 6);
 
   return (
     <>
       {/* Module 1 */}
       <div>
-        {!assistantList ? (
+        {assistantInfo.length === 0 ? (
           <>
             <SkeletonCard />
             <SkeletonCard />
@@ -158,18 +60,19 @@ const Assignment = () => {
         ) : (
           <>
             <h1 className="text-2xl mb-4 text-left font-semibold">Module 1</h1>
-            <AssignmentLevel
-              assistantInfo={assistantList[0]}
-              setLevelup={setLevelup1}
-            />
-            <AssignmentLevel
-              assistantInfo={assistantList[1]}
-              setLevelup={setLevelup2}
-            />
-            <AssignmentLevel
-              assistantInfo={assistantList[2]}
-              setLevelup={setLevelup3}
-            />
+            {module1.map((assistant, index) => (
+              <AssignmentLevel
+                key={assistant.id}
+                assistantInfo={assistant}
+                setLevelup={
+                  index === 0
+                    ? setLevelup1
+                    : index === 1
+                    ? setLevelup2
+                    : setLevelup3
+                }
+              />
+            ))}
           </>
         )}
       </div>
@@ -178,30 +81,29 @@ const Assignment = () => {
       <h1 className="text-2xl mt-8 mb-4 font-semibold text-left">Module 2</h1>
       <div className="relative mt-10 select-none pointer-events-none rounded-lg overflow-hidden">
         <div className="absolute inset-0 z-1 bg-black/20 backdrop-blur-xs flex justify-center items-center">
-          <img src={padLock} alt="Locked" className="w-20 h-20 " />
+          <img src={padLock} alt="Locked" className="w-20 h-20" />
         </div>
-        <div className="relative z-0 opacity-50 ">
-          {!assistantList2 ? (
+        <div className="relative z-0 opacity-50">
+          {assistantInfo.length === 0 ? (
             <>
               <SkeletonCard />
               <SkeletonCard />
               <SkeletonCard />
             </>
           ) : (
-            <>
+            module2.map((assistant, index) => (
               <AssignmentLevel
-                assistantInfo={assistantList2[0]}
-                setLevelup={setLevelup4}
+                key={assistant.id}
+                assistantInfo={assistantInfo}
+                setLevelup={
+                  index === 0
+                    ? setLevelup4
+                    : index === 1
+                    ? setLevelup5
+                    : setLevelup6
+                }
               />
-              <AssignmentLevel
-                assistantInfo={assistantList2[1]}
-                setLevelup={setLevelup5}
-              />
-              <AssignmentLevel
-                assistantInfo={assistantList2[2]}
-                setLevelup={setLevelup6}
-              />
-            </>
+            ))
           )}
         </div>
       </div>
