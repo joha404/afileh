@@ -338,38 +338,6 @@ const Dashboard = () => {
             <Line data={data} options={options2} />
           </div>
         </div>
-
-        <div className="xl:w-[520px] 2xl:min-w-[520px] xl:min-w-[400px] w-full sm:h-[600px] h-full bg-white rounded-lg sm:p-10 p-4 shadow flex flex-col items-center">
-          <h2 className="sm:text-2xl xs:text-xl text-lg font-semibold text-[#161C24]  text-start mb-5">
-            Top Categories
-          </h2>
-          <div className="relative xs:w-60 w-40 xs:h-60 h-40">
-            <Doughnut data={data2} options={options3} />
-            <div className="absolute inset-0 flex flex-col items-center justify-center md:text-3xl xs:text-2xl text-xl text-[#161C24] font-semibold">
-              <span>Over all</span>
-              <span>80%</span>
-            </div>
-          </div>
-          <div className="w-full mt-4">
-            {data2.labels.map((label, index) => (
-              <div
-                key={index}
-                className="flex justify-between items-center py-1 text-gray-700"
-              >
-                <div className="flex items-center gap-5">
-                  <span
-                    className="sm:w-9 xs:w-6 w-4 sm:h-9 xs:h-6 h-4 rounded-full"
-                    style={{
-                      backgroundColor: data2.datasets[0].backgroundColor[index],
-                    }}
-                  ></span>
-                  <p className="sm:text-xl text-[#161C24]">{label}</p>
-                </div>
-                <IoIosArrowForward size={33} />
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );

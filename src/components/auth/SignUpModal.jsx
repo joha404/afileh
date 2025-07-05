@@ -66,7 +66,7 @@ const SignUpModal = ({ setIsSignIn, setIsSignUp }) => {
     <CommonModalWrapper
       title="Sign Up"
       subtitle="Please fill out the fields below"
-      className="xl:px-24 md:px-12 2xl:py-14 md:py-10"
+      className="xl:px-12 md:px-6 2xl:py-7 md:py-4 max-h-[85vh]"
     >
       <div
         className="absolute top-6 right-6 cursor-pointer z-10"
@@ -227,12 +227,12 @@ const SignUpModal = ({ setIsSignIn, setIsSignUp }) => {
           <p className="text-red-500 text-sm">{errors.terms.message}</p>
         )}
 
-        <CommonSubmitBtn className="mt-4">
+        <CommonSubmitBtn className="mt-2">
           {loading ? <PulseLoader size={12} /> : "Sign Up"}
         </CommonSubmitBtn>
       </form>
 
-      <p className="text-base mt-4">
+      <p className="text-base">
         Already have an account?{" "}
         <b className="cursor-pointer text-[#3EC65D]" onClick={handleSignInOpen}>
           Sign In

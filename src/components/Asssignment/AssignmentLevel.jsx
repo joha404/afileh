@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { FaLock } from "react-icons/fa";
 import { FiPhoneCall } from "react-icons/fi";
-import assignment_image from "../../assets/images/ai_caller_profile.png";
-import VapiIntegration from "@/utils/VapiIntegration";
-import { getAllCalls } from "../api/callLog";
 import { BeatLoader } from "react-spinners";
+import VapiIntegration from "@/utils/VapiIntegration";
 
 export default function AssignmentLevel({ assistantInfo, setLevelup }) {
   const [callOpen, setCallOpen] = useState(false);
@@ -14,88 +12,18 @@ export default function AssignmentLevel({ assistantInfo, setLevelup }) {
 
   useEffect(() => {
     if (assistantInfo && Object.keys(assistantInfo).length > 0) {
-      fetchAssistantScore();
     }
   }, [assistantInfo]);
 
-  const fetchAssistantScore = async () => {
-    setLoading(true);
-    try {
-      const userTokenRaw = localStorage.getItem("userInfo");
-      const currentEmail = userTokenRaw?.trim().toLowerCase();
-      if (!currentEmail) return;
-
-      const allCalls = await getAllCalls();
-
-      const assistantCalls = allCalls.filter((call) => {
-        const email =
-          call.assistantOverrides?.variableValues?.email?.toLowerCase();
-        const name = call.assistant?.name;
-        return email === currentEmail && name === assistantInfo?.name;
-      });
-
-      let bestScore = 0;
-
-      assistantCalls.forEach((call) => {
-        const { score } = calculateCallScore(call);
-        bestScore = Math.max(bestScore, score);
-      });
-
-      setScore1(bestScore);
-      if (typeof setLevelup === "function") {
-        setLevelup(bestScore);
-      }
-    } catch (error) {
-      console.error("Error fetching assistant score:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleCallClose = () => {
     setCallOpen(false);
-    fetchAssistantScore(); // Refresh score after call ends
+    // fetchAssistantScore();
   };
 
-  const calculateCallScore = (callData) => {
-    const successEvaluation = callData.analysis?.successEvaluation === "true";
-    const start = new Date(callData.startedAt);
-    const end = new Date(callData.endedAt);
-    const durationInSeconds = (end - start) / 1000;
-
-    const totalMessages = callData.messages?.length || 0;
-    const cost = callData.cost || 0;
-
-    const systemContent =
-      callData.model?.messages?.find((msg) => msg.role === "system")?.content ||
-      "";
-    const contentLength = systemContent.length;
-
-    const successScore = successEvaluation ? 80 : 0;
-    const durationScore = Math.min((durationInSeconds / 60) * 15, 15);
-    const messageScore = Math.min(totalMessages * 1.5, 15);
-    const contentLengthScore = Math.min((contentLength / 1000) * 8.5, 8);
-
-    const rawTotal =
-      successScore + durationScore + messageScore + contentLengthScore;
-
-    const totalScore = parseFloat(Math.min(rawTotal, 100).toFixed(2)); // cap total to 100
-
-    return {
-      callId: callData.id,
-      score: totalScore,
-      successEvaluation,
-      durationInSeconds,
-      costInUSD: cost,
-      contentLength,
-    };
-  };
-
-  // 👉 Don't render anything if assistantInfo is empty or null
-  if (!assistantInfo || Object.keys(assistantInfo).length === 0) {
+  if (!assistantInfo || typeof assistantInfo !== "object") {
     return (
       <div className="w-full flex justify-center items-center p-5 bg-white rounded-lg">
-        <p className="text-gray-500">No module available.</p>
+        <p className="text-gray-500">Invalid assistant data.</p>
       </div>
     );
   }
@@ -112,54 +40,74 @@ export default function AssignmentLevel({ assistantInfo, setLevelup }) {
             </div>
           )}
 
-          <div className="w-full flex xl:flex-row flex-col sm:gap-6 gap-3 xl:justify-left xl:items-left p-3 bg-[#FAFAFA] rounded-lg">
-            <div className="sm:min-w-[147px] h-[158px] overflow-hidden">
-              <img
-                src={assignment_image}
-                alt="Assignment"
-                className="w-auto h-full object-contain"
-              />
-            </div>
+          <div className="w-full flex flex-col sm:p-5 p-3 rounded-[8px] bg-white">
+            <div className="w-full flex flex-col gap-5 justify-start items-start rounded-xl p-3 bg-[#EEF2F5]">
+              <div className="w-full flex flex-col xl:flex-row gap-6 bg-[#FAFAFA] p-3 rounded-lg">
+                {/* LEFT: Image + Info */}
+                <div className="flex flex-1 gap-4 xl:gap-6">
+                  <div className="w-[147px] h-[158px] flex-shrink-0 overflow-hidden rounded-md">
+                    <img
+                      src={
+                        // assistantInfo?.assistant?.avatar_url ||
+                        "https://as2.ftcdn.net/v2/jpg/11/60/26/41/1000_F_1160264132_mNa38Wh7M3Qy2cRgD8J9VDCcxnUNB5T2.jpg"
+                      }
+                      alt="Assignment"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
 
-            <div className="w-full flex flex-col gap-2">
-              <h3 className="sm:text-xl text-lg font-semibold">
-                {assistantInfo?.name || "Unknown Assistant"}
-              </h3>
-              {assistantInfo?.model?.messages?.length > 0 ? (
-                assistantInfo.model.messages.map((msg, index) => (
-                  <p
-                    key={index}
-                    className="sm:text-lg xs:text-base text-sm text-[#545357]"
+                  <div className="flex flex-col justify-between gap-2">
+                    <h3 className="text-lg sm:text-xl font-semibold">
+                      {assistantInfo?.assistant?.assistant_name ||
+                        "Unknown Assistant"}
+                    </h3>
+
+                    {assistantInfo?.model?.messages?.length > 0 ? (
+                      assistantInfo.model.messages.map((msg, index) => (
+                        <p
+                          key={index}
+                          className="text-sm sm:text-base text-[#545357]"
+                        >
+                          {msg.content.slice(0, 300)}
+                          {msg.content.length > 300 ? "..." : ""}
+                        </p>
+                      ))
+                    ) : (
+                      <p className="text-sm sm:text-base text-[#545357]">
+                        Lorem ipsum dolor sit amet consectetur adipisicing elit.
+                        Praesentium quia maiores magni animi exercitationem
+                        nobis. Accusantium consequuntur exercitationem incidunt
+                        quisquam aperiam ipsa adipisci mollitia quis quidem
+                        nostrum eos error ut id libero magni a, dolorem
+                        perspiciatis. Ducimus vero modi iste?
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* RIGHT: Mark + Call Button */}
+                <div className="w-full xl:w-[300px] flex flex-col justify-between items-start xl:items-end gap-3">
+                  <h4 className="text-sm sm:text-base font-medium text-gray-800">
+                    Mark:{" "}
+                    <span className="text-[#3EC65D] font-semibold">
+                      {loading ? (
+                        <BeatLoader size={8} color="#3EC65D" />
+                      ) : (
+                        `${score1}%`
+                      )}
+                    </span>
+                  </h4>
+                  <button
+                    onClick={() => setCallOpen(true)}
+                    className="w-full xl:w-auto sm:px-4 py-2 flex items-center justify-center gap-2 bg-[#3EC65D] hover:bg-[#448153] text-white rounded-lg"
                   >
-                    {msg.content.slice(0, 300)}
-                    {msg.content.length > 300 ? "..." : ""}
-                  </p>
-                ))
-              ) : (
-                <p className="sm:text-lg xs:text-base text-sm text-[#545357]">
-                  Description is not available.
-                </p>
-              )}
-            </div>
-
-            <div className="flex w-auto sm:w-[250px] md:w-[280px] lg:w-[300px] flex-col xl:items-end">
-              <h4>
-                Mark:{" "}
-                <span className="text-[#3EC65D] font-semibold">
-                  {loading ? (
-                    <BeatLoader size={8} color="#3EC65D" />
-                  ) : (
-                    `${score1}%`
-                  )}
-                </span>
-              </h4>
-              <button
-                onClick={() => setCallOpen(true)}
-                className="w-full sm:p-3 p-2 flex items-center gap-3 cursor-pointer bg-[#3EC65D] hover:bg-[#448153] text-white rounded-lg mt-4"
-              >
-                <FiPhoneCall className="sm:text-2xl" />
-                <span className="sm:text-xl font-medium">Start Call Now</span>
-              </button>
+                    <FiPhoneCall className="text-lg sm:text-xl" />
+                    <span className="text-sm sm:text-base font-medium">
+                      Start Call Now
+                    </span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -169,7 +117,7 @@ export default function AssignmentLevel({ assistantInfo, setLevelup }) {
             <div className="bg-white p-8 rounded-2xl sm:w-[90%] lg:w-[30%]">
               <VapiIntegration
                 onClose={handleCallClose}
-                assistantInfo={assistantInfo}
+                assistantId={assistantInfo?.assistant?.assistant_id}
               />
             </div>
           </div>
