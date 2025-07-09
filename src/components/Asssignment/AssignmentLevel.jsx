@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { FaLock } from "react-icons/fa";
 import { FiPhoneCall } from "react-icons/fi";
 import { BeatLoader } from "react-spinners";
 import VapiIntegration from "@/utils/VapiIntegration";
@@ -9,7 +8,7 @@ export default function AssignmentLevel({ assistantInfo, setLevelup }) {
   const [lock, setLock] = useState(false);
   const [score1, setScore1] = useState(0);
   const [loading, setLoading] = useState(false);
-
+  console.log(assistantInfo);
   useEffect(() => {
     if (assistantInfo && Object.keys(assistantInfo).length > 0) {
     }
@@ -32,14 +31,6 @@ export default function AssignmentLevel({ assistantInfo, setLevelup }) {
     <div className="w-full flex flex-col bg-white sm:p-5 p-3 rounded-[8px]">
       <div className="w-full flex flex-col sm:gap-3">
         <div className="w-full flex flex-col gap-5 justify-start items-start rounded-xl sm:p-5 p-3 bg-[#EEF2F5] relative">
-          {lock && (
-            <div className="w-full h-full absolute top-0 left-0 bg-[rgba(217,217,217,0.50)] backdrop-blur-[5px] z-10 flex justify-center items-center">
-              <span className="w-16 h-16 bg-[#FF5A54] mt-10 text-4xl flex justify-center items-center rounded-full text-white">
-                <FaLock />
-              </span>
-            </div>
-          )}
-
           <div className="w-full flex flex-col sm:p-5 p-3 rounded-[8px] bg-white">
             <div className="w-full flex flex-col gap-5 justify-start items-start rounded-xl p-3 bg-[#EEF2F5]">
               <div className="w-full flex flex-col xl:flex-row gap-6 bg-[#FAFAFA] p-3 rounded-lg">
@@ -48,7 +39,7 @@ export default function AssignmentLevel({ assistantInfo, setLevelup }) {
                   <div className="w-[147px] h-[158px] flex-shrink-0 overflow-hidden rounded-md">
                     <img
                       src={
-                        // assistantInfo?.assistant?.avatar_url ||
+                        assistantInfo?.assistant?.avatar_url ||
                         "https://as2.ftcdn.net/v2/jpg/11/60/26/41/1000_F_1160264132_mNa38Wh7M3Qy2cRgD8J9VDCcxnUNB5T2.jpg"
                       }
                       alt="Assignment"
@@ -56,10 +47,9 @@ export default function AssignmentLevel({ assistantInfo, setLevelup }) {
                     />
                   </div>
 
-                  <div className="flex flex-col justify-between gap-2">
+                  <div className="flex flex-col justify-around gap-2">
                     <h3 className="text-lg sm:text-xl font-semibold">
-                      {assistantInfo?.assistant?.assistant_name ||
-                        "Unknown Assistant"}
+                      {assistantInfo?.assistant?.assistant_name}
                     </h3>
 
                     {assistantInfo?.model?.messages?.length > 0 ? (
@@ -74,12 +64,7 @@ export default function AssignmentLevel({ assistantInfo, setLevelup }) {
                       ))
                     ) : (
                       <p className="text-sm sm:text-base text-[#545357]">
-                        Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                        Praesentium quia maiores magni animi exercitationem
-                        nobis. Accusantium consequuntur exercitationem incidunt
-                        quisquam aperiam ipsa adipisci mollitia quis quidem
-                        nostrum eos error ut id libero magni a, dolorem
-                        perspiciatis. Ducimus vero modi iste?
+                        {assistantInfo?.assistant?.description}
                       </p>
                     )}
                   </div>
