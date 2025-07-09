@@ -36,19 +36,8 @@ const CallLog = () => {
       }
 
       const allCallLog = await getAllCalls();
-
-      const userCalls = allCallLog.filter((call) => {
-        const email = call.assistantOverrides?.variableValues?.email
-          ?.trim()
-          .toLowerCase();
-        return email === currentEmail;
-      });
-      if (userCalls == []) {
-        setCallLogAll([]);
-      } else {
-        setCallLogAll(userCalls);
-        console.log(userCalls);
-      }
+      console.log(allCallLog.data);
+      setCallLogAll(allCallLog.data);
     } catch (err) {
       console.error(err);
       setError("Failed to load call logs. Please try again.");
@@ -62,19 +51,19 @@ const CallLog = () => {
   }, []);
 
   const handleCallSummary = (call) => {
-    const { id, type, startedAt, endedAt, createdAt, analysis } = call;
-    const duration =
-      startedAt && endedAt ? calculateDuration(startedAt, endedAt) : "N/A";
+    // const { id, type, startedAt, endedAt, createdAt, analysis } = call;
+    // const Duration =
+    //   startedAt && endedAt ? calculateDuration(startedAt, endedAt) : "N/A";
 
-    const callData = {
-      id,
-      type,
-      duration,
-      createdAt: new Date(createdAt).toLocaleString(),
-      summary: analysis?.summary || "No summary available",
-    };
+    // const callData = {
+    //   id,
+    //   type,
+    //   Duration,
+    //   createdAt: new Date(createdAt).toLocaleString(),
+    //   Summary: analysis?.Summary || "No summary available",
+    // };
 
-    setSelectedCall(callData);
+    setSelectedCall(call);
     setIsModalOpen(true);
   };
 
@@ -139,14 +128,10 @@ const CallLog = () => {
             <tbody className="bg-white">
               {callLogAll?.map((item, index) => (
                 <tr key={index} className="border-b border-gray-300 ">
-                  <td className="px-6 py-4">{item.type}</td>
+                  <td className="px-6 py-4">{item.Call_Type}</td>
+                  <td className="px-6 py-4">{item.Duration}</td>
                   <td className="px-6 py-4">
-                    {item.startedAt && item.endedAt
-                      ? calculateDuration(item.startedAt, item.endedAt)
-                      : "N/A"}
-                  </td>
-                  <td className="px-6 py-4">
-                    {new Date(item.createdAt).toLocaleString()}
+                    {new Date(item.Time).toLocaleString()}
                   </td>
                   <td
                     className="px-4 sm:px-6 sm:py-3 py-2 my-2 flex cursor-pointer

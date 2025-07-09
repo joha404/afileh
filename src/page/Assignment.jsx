@@ -24,17 +24,18 @@ const SkeletonCard = () => (
 
 const Assignment = () => {
   const [assistantInfo, setAssistantInfo] = useState([]);
-  const [levelup1, setLevelup1] = useState(false);
-  const [levelup2, setLevelup2] = useState(false);
-  const [levelup3, setLevelup3] = useState(false);
-  const [levelup4, setLevelup4] = useState(false);
-  const [levelup5, setLevelup5] = useState(false);
-  const [levelup6, setLevelup6] = useState(false);
+  const [levelups, setLevelups] = useState([
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+  ]);
 
   const fetchAssignment = async () => {
     try {
       const res = await getAllAssignment();
-      console.log(res.data);
       setAssistantInfo(res.data);
     } catch (error) {
       console.error("Error fetching assignments:", error);
@@ -45,6 +46,14 @@ const Assignment = () => {
     fetchAssignment();
   }, []);
 
+  const handleLevelUp = (index) => {
+    const updated = [...levelups];
+    updated[index] = true;
+    setLevelups(updated);
+  };
+
+  const isModule2Unlocked = levelups.slice(0, 3).every((lvl) => lvl === true);
+
   const module1 = assistantInfo.slice(0, 3);
   const module2 = assistantInfo.slice(3, 6);
 
@@ -52,6 +61,7 @@ const Assignment = () => {
     <>
       {/* Module 1 */}
       <div>
+        <h1 className="text-2xl mb-4 text-left font-semibold">Module 1</h1>
         {assistantInfo.length === 0 ? (
           <>
             <SkeletonCard />
@@ -59,32 +69,29 @@ const Assignment = () => {
             <SkeletonCard />
           </>
         ) : (
-          <>
-            <h1 className="text-2xl mb-4 text-left font-semibold">Module 1</h1>
-            {module1.map((assistant, index) => (
-              <AssignmentLevel
-                key={assistant.id}
-                assistantInfo={assistant}
-                setLevelup={
-                  index === 0
-                    ? setLevelup1
-                    : index === 1
-                    ? setLevelup2
-                    : setLevelup3
-                }
-              />
-            ))}
-          </>
+          module1.map((assistant, index) => (
+            <AssignmentLevel
+              key={assistant.id}
+              assistantInfo={assistant}
+              setLevelup={() => handleLevelUp(index)}
+            />
+          ))
         )}
       </div>
 
-      {/* Module 2 - Locked */}
+      {/* Module 2 */}
       <h1 className="text-2xl mt-8 mb-4 font-semibold text-left">Module 2</h1>
-      <div className="relative mt-10 select-none pointer-events-none rounded-lg overflow-hidden">
-        <div className="absolute inset-0 z-1 bg-black/20 backdrop-blur-xs flex justify-center items-center">
-          <CiLock />
-        </div>
-        <div className="relative z-0 opacity-50">
+      <div
+        className={`relative mt-10 rounded-lg overflow-hidden ${
+          !isModule2Unlocked ? "select-none pointer-events-none opacity-50" : ""
+        }`}
+      >
+        {!isModule2Unlocked && (
+          <div className="absolute inset-0 z-10 bg-black/20 backdrop-blur-sm flex justify-center items-center">
+            <CiLock size={32} className="text-white" />
+          </div>
+        )}
+        <div className="relative z-0">
           {assistantInfo.length === 0 ? (
             <>
               <SkeletonCard />
@@ -95,14 +102,8 @@ const Assignment = () => {
             module2.map((assistant, index) => (
               <AssignmentLevel
                 key={assistant.id}
-                assistantInfo={assistantInfo}
-                setLevelup={
-                  index === 0
-                    ? setLevelup4
-                    : index === 1
-                    ? setLevelup5
-                    : setLevelup6
-                }
+                assistantInfo={assistant}
+                setLevelup={() => handleLevelUp(index + 3)}
               />
             ))
           )}
