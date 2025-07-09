@@ -7,7 +7,6 @@ const CallSummaryModal = ({ isOpen, onClose, data }) => {
       onClose();
     }
   };
-
   return (
     <>
       <div
@@ -33,7 +32,7 @@ const CallSummaryModal = ({ isOpen, onClose, data }) => {
 
           <div className="mb-4">
             <p className="text-base leading-relaxed">
-              {data?.summary || "No summary available."}
+              {data?.Summary || "No summary available."}
             </p>
           </div>
         </div>

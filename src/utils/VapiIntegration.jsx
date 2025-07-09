@@ -8,8 +8,10 @@ const vapi = new Vapi("8ce3246a-9720-4cd7-92c0-6a743f9ca9e7");
 const VapiIntegration = ({
   onClose,
   assistantInfo,
+  assistantId,
   callDurationLimit = undefined,
 }) => {
+  console.log(assistantId);
   const [connecting, setConnecting] = useState(false);
   const [connected, setConnected] = useState(true);
   const [error, setError] = useState("");
@@ -114,7 +116,7 @@ const VapiIntegration = ({
           provider: "playht",
           voiceId: "jennifer",
         },
-        name: assistantInfo,
+        name: assistantId,
       };
 
       const callOptions = callDurationLimit
@@ -125,7 +127,7 @@ const VapiIntegration = ({
             },
           };
 
-      await vapi.start(callConfig, callOptions);
+      await vapi.start(assistantId);
     } catch (err) {
       setError("Failed to start call: " + err.message);
       setConnecting(false);
