@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import padLock from "../assets/images/padLock.png";
+import { CiLock } from "react-icons/ci";
 import AssignmentLevel from "@/components/Asssignment/AssignmentLevel";
 import { getAllAssignment } from "@/components/api/assignment";
 
@@ -34,6 +34,7 @@ const Assignment = () => {
   const fetchAssignment = async () => {
     try {
       const res = await getAllAssignment();
+      console.log(res.data);
       setAssistantInfo(res.data);
     } catch (error) {
       console.error("Error fetching assignments:", error);
@@ -81,7 +82,7 @@ const Assignment = () => {
       <h1 className="text-2xl mt-8 mb-4 font-semibold text-left">Module 2</h1>
       <div className="relative mt-10 select-none pointer-events-none rounded-lg overflow-hidden">
         <div className="absolute inset-0 z-1 bg-black/20 backdrop-blur-xs flex justify-center items-center">
-          <img src={padLock} alt="Locked" className="w-20 h-20" />
+          <CiLock />
         </div>
         <div className="relative z-0 opacity-50">
           {assistantInfo.length === 0 ? (

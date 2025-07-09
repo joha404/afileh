@@ -3,7 +3,7 @@ import Vapi from "@vapi-ai/web";
 import { RxCross1 } from "react-icons/rx";
 import ActiveCallDetail from "@/components/ActiveCallDetail";
 
-const vapi = new Vapi("ca3070ad-eee9-44a7-98ea-6bdca72d8b86");
+const vapi = new Vapi("8ce3246a-9720-4cd7-92c0-6a743f9ca9e7");
 
 const VapiIntegration = ({
   onClose,
