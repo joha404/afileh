@@ -7,11 +7,9 @@ const vapi = new Vapi("8ce3246a-9720-4cd7-92c0-6a743f9ca9e7");
 
 const VapiIntegration = ({
   onClose,
-  assistantInfo,
   assistantId,
   callDurationLimit = undefined,
 }) => {
-  console.log(assistantId);
   const [connecting, setConnecting] = useState(false);
   const [connected, setConnected] = useState(true);
   const [error, setError] = useState("");
@@ -23,17 +21,7 @@ const VapiIntegration = ({
   const intervalId = useRef(null);
   const callEndTimeout = useRef(null);
 
-  const getUserToken = () => {
-    try {
-      const tokenString = localStorage.getItem("userInfo");
-      return tokenString ? tokenString : null;
-    } catch (error) {
-      console.error("Failed to parse userInfo:", error);
-      return null;
-    }
-  };
-  const userToken = getUserToken();
-
+  const userInfo = localStorage.getItem("userInfo");
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60)
       .toString()
@@ -96,38 +84,13 @@ const VapiIntegration = ({
     setError("");
 
     try {
-      const callConfig = {
-        transcriber: {
-          provider: "deepgram",
-          model: "nova-2",
-          language: "en-US",
+      const callOptions = {
+        metadata: {
+          userInfo: userInfo || {},
         },
-        model: {
-          provider: "openai",
-          model: "gpt-3.5-turbo",
-          messages: [
-            {
-              role: "system",
-              content: "You are a helpful assistant.",
-            },
-          ],
-        },
-        voice: {
-          provider: "playht",
-          voiceId: "jennifer",
-        },
-        name: assistantId,
       };
 
-      const callOptions = callDurationLimit
-        ? undefined
-        : {
-            variableValues: {
-              email: userToken || "",
-            },
-          };
-
-      await vapi.start(assistantId);
+      await vapi.start(assistantId, callOptions);
     } catch (err) {
       setError("Failed to start call: " + err.message);
       setConnecting(false);
@@ -137,7 +100,7 @@ const VapiIntegration = ({
 
   const endCall = async () => {
     try {
-      vapi.stop(); // ✅ Correct method from SDK
+      vapi.stop();
       SetEndCallButton(false);
       setConnected(true);
       setCallTime(0);

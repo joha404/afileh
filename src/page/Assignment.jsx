@@ -92,7 +92,7 @@ const Assignment = () => {
           </div>
         )}
         <div className="relative z-0">
-          {assistantInfo.length === 0 ? (
+          {!assistantInfo.length < 0 ? (
             <>
               <SkeletonCard />
               <SkeletonCard />

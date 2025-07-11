@@ -10,10 +10,6 @@ export default function AssignmentLevel({ assistantInfo, setLevelup }) {
 
   const handleCallClose = () => {
     setCallOpen(false);
-    // TODO: Refresh score from backend or props if needed
-    // Example: fetchNewScore()
-    // setScore(newScore);
-    // Optionally call setLevelup(true) if score >= 100
   };
 
   if (!assistantInfo || typeof assistantInfo !== "object") {
@@ -25,7 +21,6 @@ export default function AssignmentLevel({ assistantInfo, setLevelup }) {
   }
   const CreateAiCall = (id) => {
     setCallOpen(true);
-    console.log(id);
   };
 
   const assistant = assistantInfo?.assistant;
