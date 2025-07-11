@@ -1,24 +1,35 @@
-import React from "react";
-
-const numBars = 10;
+import React, { useEffect, useRef, useState } from "react";
+import voiceJson from "../../utils/voice.json";
+import Lottie from "lottie-react";
 
 const VolumeLevel = ({ volume }) => {
+  const lottieRef = useRef();
+  const [frameCount, setFrameCount] = useState(0);
+
+  useEffect(() => {
+    if (lottieRef.current && lottieRef.current.getDuration) {
+      const totalFrames = lottieRef.current.getDuration(true);
+      setFrameCount(totalFrames);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (frameCount > 0 && lottieRef.current) {
+      const normalized = Math.min(Math.max(volume, 0), 1);
+      const targetFrame = Math.floor(normalized * frameCount);
+      lottieRef.current.goToAndStop(targetFrame, true);
+    }
+  }, [volume, frameCount]);
+
   return (
-    <div className="p-4">
-      <div className="text-black mb-2">
-        <p className="text-lg font-semibold">Volume Level:</p>
-      </div>
-      <div className="flex mb-3 space-x-1">
-        {Array.from({ length: numBars }, (_, i) => (
-          <div
-            key={i}
-            className={`w-4 h-4 rounded-md transition-all duration-300 ${
-              i / numBars < volume ? "bg-green-500" : "bg-gray-300"
-            }`}
-          />
-        ))}
-      </div>
-      <div className="text-black text-lg font-semibold">{volume}</div>
+    <div className="p-4 flex flex-col items-center justify-center">
+      <Lottie
+        lottieRef={lottieRef}
+        animationData={voiceJson}
+        loop={false}
+        autoplay={false}
+        style={{ width: 120, height: 120 }}
+      />
     </div>
   );
 };
