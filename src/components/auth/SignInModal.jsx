@@ -35,7 +35,10 @@ const SignInModal = ({ setIsSignIn, setIsSignUp }) => {
       const { access_token, refresh_token } = response.data.data;
       localStorage.setItem("access_token", access_token);
       localStorage.setItem("refresh_token", refresh_token);
-      localStorage.setItem("userInfo", payload.email);
+      localStorage.setItem(
+        "userInfo",
+        JSON.stringify({ email: payload.email })
+      );
 
       setIsSignIn(false);
       setIsSignUp(false);
