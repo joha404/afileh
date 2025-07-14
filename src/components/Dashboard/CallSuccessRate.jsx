@@ -3,7 +3,7 @@ import { FaPhoneVolume } from "react-icons/fa6";
 import { FaArrowRight } from "react-icons/fa";
 import { Line } from "react-chartjs-2";
 import { IoIosArrowForward } from "react-icons/io";
-function CallSuccessRate({ avgSuccessRate, successRate, formattedTime }) {
+function CallSuccessRate({ dashboardData, isLoading }) {
   const options = {
     responsive: true,
     maintainAspectRatio: false,
@@ -21,7 +21,7 @@ function CallSuccessRate({ avgSuccessRate, successRate, formattedTime }) {
     datasets: [
       {
         label: "Call Success Rate",
-        data: [successRate, 35, 50, 45, 60, 40, 70],
+        data: [dashboardData?.call_success_rate, 35, 50, 45, 60, 40, 70],
         borderColor: "#22c55e",
         borderWidth: 2,
         pointRadius: 0,
@@ -42,22 +42,33 @@ function CallSuccessRate({ avgSuccessRate, successRate, formattedTime }) {
               </h1>
             </div>
 
-            <p className="text-[#919EAB] text-xs">
-              Averate Success Rate : {avgSuccessRate} %
-            </p>
+            {/* <p className="text-[#919EAB] text-xs">
+              Averate Success Rate : {dashboardData?.call_success_rate} %
+            </p> */}
           </div>
           <IoIosArrowForward size={36} />
         </div>
         <div className="w-full flex p-4 flex-col justify-start items-start">
-          <h2 className="md:text-[22px] xs:text-xl text-lg text-[#161C24] font-medium">
-            Meeting Booked {parseInt(successRate)}
+          <h2 className="md:text-[22px] flex gap-4 items-center xs:text-xl text-lg text-[#161C24] font-medium">
+            Call Success Rate{" "}
+            {isLoading ? (
+              <div className="flex space-x-2 justify-center items-center bg-white h-1 dark:invert">
+                <span className="sr-only">Loading...</span>
+                <div className="h-2 w-2 bg-[#22c55e] rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                <div className="h-2 w-2 bg-[#22c55e] rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                <div className="h-2 w-2 bg-[#22c55e] rounded-full animate-bounce"></div>
+              </div>
+            ) : (
+              parseInt(dashboardData?.call_success_rate)
+            )}{" "}
+            %
           </h2>
           <div className="w-full">
             <div className="flex justify-between items-center gap-1 text-green-500 text-[8px] font-medium">
-              <span className="flex gap-2">
-                {successRate} <FaArrowRight size={8} />
-              </span>
-              <span className="text-gray-500">{formattedTime}</span>
+              {/* <span className="flex gap-2">
+                {dashboardData?.call_success_rate} <FaArrowRight size={8} />
+              </span> */}
+              {/* <span className="text-gray-500">{formattedTime}</span> */}
             </div>
             <div className="w-full h-16 mt-2">
               <Line data={data} options={options} />

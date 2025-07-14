@@ -3,7 +3,7 @@ import { FaPhoneVolume } from "react-icons/fa6";
 import { FaArrowRight } from "react-icons/fa";
 import { Line } from "react-chartjs-2";
 import { IoIosArrowForward } from "react-icons/io";
-function AICall({ callHistory }) {
+function AICall({ dashboardData, isLoading }) {
   const options = {
     responsive: true,
     maintainAspectRatio: false,
@@ -22,15 +22,13 @@ function AICall({ callHistory }) {
       {
         label: "Call Success Rate",
         data: [35, 50, 45, 60, 40, 70],
-        borderColor: "red",
+        borderColor: "#22c55e",
         borderWidth: 2,
         pointRadius: 0,
       },
     ],
   };
-  useEffect(() => {
-    console.log(callHistory?.length);
-  });
+
   return (
     <div>
       <div className="w-full rounded-lg shadow bg-white">
@@ -46,16 +44,21 @@ function AICall({ callHistory }) {
           <IoIosArrowForward size={36} />
         </div>
         <div className="w-full flex p-4 flex-col justify-start items-start">
-          <h2 className="md:text-[22px] xs:text-xl text-lg text-[#161C24] font-medium">
-            {callHistory?.length} Times
+          <h2 className="md:text-[22px] flex items-center gap-4 xs:text-xl text-lg text-[#161C24] font-medium">
+            Total AI Calls{" "}
+            {isLoading ? (
+              <div className="flex space-x-2 justify-center items-center bg-white h-1 dark:invert">
+                <span className="sr-only">Loading...</span>
+                <div className="h-2 w-2 bg-[#22c55e] rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                <div className="h-2 w-2 bg-[#22c55e] rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                <div className="h-2 w-2 bg-[#22c55e] rounded-full animate-bounce"></div>
+              </div>
+            ) : (
+              parseInt(dashboardData.total_ai_calls)
+            )}{" "}
+            Times
           </h2>
           <div className="w-full">
-            <div className="flex justify-between items-center gap-1 text-red-500 text-[8px] font-medium">
-              <span className="flex gap-2">
-                <FaArrowRight size={8} />
-              </span>
-              <span className="text-gray-500"></span>
-            </div>
             <div className="w-full h-16 mt-2">
               <Line data={data} options={options} />
             </div>
