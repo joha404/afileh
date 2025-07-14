@@ -1,7 +1,5 @@
 import { MdOutlineCallMissedOutgoing } from "react-icons/md";
-import { IoIosArrowForward } from "react-icons/io";
 import { Line } from "react-chartjs-2";
-
 import {
   Chart as ChartJS,
   ArcElement,
@@ -13,14 +11,13 @@ import {
   Legend,
 } from "chart.js";
 
-import { Doughnut } from "react-chartjs-2";
 import { Select } from "antd";
 import { useEffect, useState } from "react";
-import { getAllCalls } from "@/components/api/callLog";
 import CallDuration from "@/components/Dashboard/CallDuration";
 import CallSuccessRate from "@/components/Dashboard/CallSuccessRate";
 import CallDropRate from "@/components/Dashboard/CallDropRate";
 import AICall from "@/components/Dashboard/AICall";
+import { getDashboardData } from "@/components/api/dashboard";
 
 ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement);
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -34,143 +31,37 @@ ChartJS.register(
 );
 
 const Dashboard = () => {
-  const [callHistory, setCallHistory] = useState([]);
-  const [totalMinutes, setTotalMinutes] = useState(0);
-  const [successRate, setSuccessRate] = useState(0);
-  const [dropRate, setDropRate] = useState(0);
-  const [callPercentage, setCallPercentage] = useState(0);
-  const [formattedTime, setFormattedTime] = useState("");
+  const [dashboardData, setDashboardData] = useState({});
   const [loading, setLoading] = useState(true);
-  const [avgSuccessRate, setAvgSuccessRate] = useState(0);
-  const [avgDropRate, setAvgDropRate] = useState(0);
 
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      x: { display: false },
-      y: { display: false },
-    },
-    elements: {
-      line: { tension: 0.4 },
-    },
-    plugins: { legend: { display: false } },
-  };
-
-  const calculateTime = (totalSeconds) => {
+  const calculateTime = (totalMinutes) => {
+    const totalSeconds = totalMinutes * 60;
     const weeks = totalSeconds / (7 * 24 * 3600);
     const days = totalSeconds / (24 * 3600);
     const hours = totalSeconds / 3600;
-    const minutes = totalSeconds / 60;
 
     if (weeks >= 1) return `${weeks.toFixed(2)} weeks`;
     if (days >= 1) return `${days.toFixed(2)} days`;
     if (hours >= 1) return `${hours.toFixed(2)} hours`;
-    return `${minutes.toFixed(2)} minutes`;
-  };
-  const calculateAverageRate = (callData, key) => {
-    const groupedByDay = {};
-    callData.forEach((call) => {
-      const date = new Date(call.startedAt).toISOString().split("T")[0];
-      if (!groupedByDay[date]) groupedByDay[date] = [];
-      groupedByDay[date].push(call);
-    });
-
-    let totalRate = 0;
-    const daysCount = Object.keys(groupedByDay).length;
-
-    for (const date in groupedByDay) {
-      const dayCalls = groupedByDay[date];
-      const relevantCalls = dayCalls.filter((call) =>
-        key === "success"
-          ? call.analysis?.successEvaluation === "true"
-          : call.endedReason === "customer-ended-call"
-      );
-
-      const rate = (relevantCalls.length / dayCalls.length) * 100;
-      totalRate += rate;
-    }
-
-    return daysCount ? (totalRate / daysCount).toFixed(2) : 0;
-  };
-  const calculateCallPercentage = (callData) => {
-    const successfulCalls = callData.filter(
-      (call) => call.analysis?.successEvaluation === "true"
-    );
-    const totalCalls = callData.length;
-    return totalCalls
-      ? ((successfulCalls.length / totalCalls) * 100).toFixed(2)
-      : 0;
+    return `${totalMinutes.toFixed(2)} minutes`;
   };
 
   useEffect(() => {
-    const fetchCalls = async () => {
+    const fetchData = async () => {
+      setLoading(true);
       try {
-        const userTokenRaw = localStorage.getItem("userInfo");
-        const currentEmail = userTokenRaw?.trim().toLowerCase();
-        if (!currentEmail) return;
-        const allCall = await getAllCalls();
-        const assistantCalls = allCall.filter((call) => {
-          const email =
-            call.assistantOverrides?.variableValues?.email?.toLowerCase();
-
-          return email === currentEmail;
-        });
-        const callData = assistantCalls;
-        setCallHistory(callData);
-        const totalSeconds = callData.reduce((acc, call) => {
-          const startTime = new Date(call.startedAt).getTime();
-          const endTime = new Date(call.endedAt).getTime();
-          return acc + (endTime - startTime) / 1000;
-        }, 0);
-
-        const minutes = (totalSeconds / 60).toFixed(2);
-        setTotalMinutes(minutes);
-
-        const formattedTimeValue = calculateTime(totalSeconds);
-        setFormattedTime(formattedTimeValue);
-
-        const successfulCalls = callData.filter(
-          (call) => call.analysis?.successEvaluation === "true"
-        );
-
-        const successRatePercentage = (
-          (successfulCalls.length / callData.length) *
-          100
-        ).toFixed(2);
-        setSuccessRate(successRatePercentage);
-
-        const droppedCalls = callData.filter(
-          (call) => call.endedReason === "customer-ended-call"
-        );
-
-        const dropRatePercentage = (
-          (droppedCalls.length / callData.length) *
-          100
-        ).toFixed(2);
-        setDropRate(dropRatePercentage);
-
-        // Calculate Call Percentage
-        const callPercentageValue = calculateCallPercentage(callData);
-        setCallPercentage(callPercentageValue);
-
-        // Calculate Average Success Rate and Drop Rate
-        const avgSuccess = calculateAverageRate(callData, "success");
-        const avgDrop = calculateAverageRate(callData, "drop");
-
-        setAvgSuccessRate(avgSuccess);
-        setAvgDropRate(avgDrop);
+        const res = await getDashboardData();
+        setDashboardData(res.data);
+        setLoading(true);
       } catch (error) {
-        console.error("Error fetching calls:", error);
+        console.error("Error fetching dashboard data:", error);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchCalls();
+    fetchData();
   }, []);
 
-  // Create a gradient fill
   const createGradient = (ctx, chartArea) => {
     const gradient = ctx.createLinearGradient(
       0,
@@ -178,8 +69,8 @@ const Dashboard = () => {
       0,
       chartArea.bottom
     );
-    gradient.addColorStop(0, "rgba(68, 84, 255, 0.3)"); // Light blue at top
-    gradient.addColorStop(1, "rgba(255, 255, 255, 0)"); // Transparent at bottom
+    gradient.addColorStop(0, "rgba(68, 84, 255, 0.3)");
+    gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
     return gradient;
   };
 
@@ -203,13 +94,13 @@ const Dashboard = () => {
       {
         label: "User Performance",
         data: [40, 30, 35, 45, 60, 60, 50, 70, 50, 55, 55, 60, 70],
-        borderColor: "#4454FF", // Line color
+        borderColor: "#4454FF",
         borderWidth: 2,
-        pointBackgroundColor: "#ffffff", // White center of points
-        pointBorderColor: "#4454FF", // Blue border of points
+        pointBackgroundColor: "#ffffff",
+        pointBorderColor: "#4454FF",
         pointRadius: 6,
         pointHoverRadius: 8,
-        fill: true, // Enable gradient fill
+        fill: true,
         backgroundColor: (context) => {
           const { chart } = context;
           const { ctx, chartArea } = chart;
@@ -220,7 +111,7 @@ const Dashboard = () => {
     ],
   };
 
-  const options2 = {
+  const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     scales: {
@@ -238,11 +129,11 @@ const Dashboard = () => {
       tooltip: { enabled: true },
     },
     elements: {
-      line: { tension: 0.3 }, // Smooth curve
+      line: { tension: 0.3 },
     },
   };
 
-  const option = [
+  const dropdownOptions = [
     { value: "Day-1", label: "Day-1" },
     { value: "Day-2", label: "Day-2" },
     { value: "Day-3", label: "Day-3" },
@@ -250,72 +141,18 @@ const Dashboard = () => {
     { value: "Day-5", label: "Day-5" },
   ];
 
-  const data2 = {
-    labels: [
-      "Opening",
-      "Building Rapport",
-      "Handling Objection",
-      "Closing",
-      "Follow-Up",
-    ],
-    datasets: [
-      {
-        data: [20, 15, 25, 20, 20], // Adjust the percentage values
-        backgroundColor: [
-          "#FFA500",
-          "#00D4FF",
-          "#0091FF",
-          "#FF9999",
-          "#A488FF",
-        ],
-        hoverBackgroundColor: [
-          "#FF8800",
-          "#00BFFF",
-          "#007BFF",
-          "#FF6666",
-          "#7A5FFF",
-        ],
-        borderWidth: 0,
-      },
-    ],
-  };
-
-  const options3 = {
-    responsive: true,
-    cutout: "75%", // Donut effect
-    plugins: {
-      legend: { display: false }, // Hide default legend
-      tooltip: { enabled: true },
-    },
-  };
-
   return (
     <div className="w-full flex flex-col justify-start items-start sm:gap-10 gap-4 overflow-hidden">
       <div className="w-full grid xl:grid-cols-4 sm:grid-cols-2 grid-cols-1 md:gap-6 gap-4">
-        <CallDuration
-          totalMinutes={totalMinutes}
-          successRate={successRate}
-          callPercentage={callPercentage}
-          formattedTime={formattedTime}
-        />
-        <CallSuccessRate
-          avgSuccessRate={avgSuccessRate}
-          successRate={successRate}
-          callPercentage={callPercentage}
-          formattedTime={formattedTime}
-        />
-        <AICall callHistory={callHistory} />
-        <CallDropRate
-          dropRate={dropRate}
-          avgDropRate={avgDropRate}
-          successRate={successRate}
-          callPercentage={callPercentage}
-          formattedTime={formattedTime}
-        />
+        <CallDuration dashboardData={dashboardData} isLoading={loading} />
+        <CallSuccessRate dashboardData={dashboardData} isLoading={loading} />
+        <AICall dashboardData={dashboardData} isLoading={loading} />
+        <CallDropRate dashboardData={dashboardData} isLoading={loading} />
       </div>
+
       <div className="w-full flex xl:flex-row flex-col justify-between items-start sm:gap-10 gap-4">
         <div className="w-full sm:h-[600px] flex flex-col sm:gap-10 gap-4 bg-white shadow rounded-lg p-4">
-          <div className="w-full flex sm:flex-row flex-col sm:justify-center justify-start sm:items-center gap-3 items-start">
+          <div className="w-full flex sm:flex-row flex-col sm:justify-between justify-start sm:items-center gap-3 items-start">
             <div className="w-full flex gap-4 items-center">
               <h2 className="sm:text-2xl xs:text-xl text-lg text-[#161C24] font-semibold">
                 User Performance
@@ -326,8 +163,8 @@ const Dashboard = () => {
               </div>
             </div>
             <Select
-              placeholder="select a option"
-              options={option}
+              placeholder="Select a day"
+              options={dropdownOptions}
               optionFilterProp="label"
               className="min-w-[152px]"
               showSearch
@@ -335,7 +172,7 @@ const Dashboard = () => {
             />
           </div>
           <div className="w-full h-full sm:mb-6">
-            <Line data={data} options={options2} />
+            <Line data={data} options={chartOptions} />
           </div>
         </div>
       </div>
