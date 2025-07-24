@@ -1,5 +1,4 @@
 import { MdOutlineCallMissedOutgoing } from "react-icons/md";
-import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   ArcElement,
@@ -11,17 +10,16 @@ import {
   Legend,
 } from "chart.js";
 
-import { Select } from "antd";
 import { useEffect, useState } from "react";
 import CallDuration from "@/components/Dashboard/CallDuration";
 import CallSuccessRate from "@/components/Dashboard/CallSuccessRate";
 import CallDropRate from "@/components/Dashboard/CallDropRate";
 import AICall from "@/components/Dashboard/AICall";
 import { getDashboardData } from "@/components/api/dashboard";
+import UserPerformanceChart from "@/components/Dashboard/UserPerformance.jsx";
 
-ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement);
-ChartJS.register(ArcElement, Tooltip, Legend);
 ChartJS.register(
+  ArcElement,
   LineElement,
   CategoryScale,
   LinearScale,
@@ -33,6 +31,7 @@ ChartJS.register(
 const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState({});
   const [loading, setLoading] = useState(true);
+  const [userPerformanceData, setUserPerformanceData] = useState([]); // ✅ corrected
 
   const calculateTime = (totalMinutes) => {
     const totalSeconds = totalMinutes * 60;
@@ -52,7 +51,7 @@ const Dashboard = () => {
       try {
         const res = await getDashboardData();
         setDashboardData(res.data);
-        setLoading(true);
+        setUserPerformanceData(res.data.user_performance || []);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
@@ -61,85 +60,6 @@ const Dashboard = () => {
     };
     fetchData();
   }, []);
-
-  const createGradient = (ctx, chartArea) => {
-    const gradient = ctx.createLinearGradient(
-      0,
-      chartArea.top,
-      0,
-      chartArea.bottom
-    );
-    gradient.addColorStop(0, "rgba(68, 84, 255, 0.3)");
-    gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
-    return gradient;
-  };
-
-  const data = {
-    labels: [
-      "1 Feb",
-      "2 Feb",
-      "3 Feb",
-      "4 Feb",
-      "5 Feb",
-      "6 Feb",
-      "7 Feb",
-      "8 Feb",
-      "9 Feb",
-      "10 Feb",
-      "11 Feb",
-      "12 Feb",
-      "13 Feb",
-    ],
-    datasets: [
-      {
-        label: "User Performance",
-        data: [40, 30, 35, 45, 60, 60, 50, 70, 50, 55, 55, 60, 70],
-        borderColor: "#4454FF",
-        borderWidth: 2,
-        pointBackgroundColor: "#ffffff",
-        pointBorderColor: "#4454FF",
-        pointRadius: 6,
-        pointHoverRadius: 8,
-        fill: true,
-        backgroundColor: (context) => {
-          const { chart } = context;
-          const { ctx, chartArea } = chart;
-          if (!chartArea) return null;
-          return createGradient(ctx, chartArea);
-        },
-      },
-    ],
-  };
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      x: {
-        grid: { display: false },
-        ticks: { color: "#999" },
-      },
-      y: {
-        grid: { color: "#E0E0E0" },
-        ticks: { color: "#999" },
-      },
-    },
-    plugins: {
-      legend: { display: false },
-      tooltip: { enabled: true },
-    },
-    elements: {
-      line: { tension: 0.3 },
-    },
-  };
-
-  const dropdownOptions = [
-    { value: "Day-1", label: "Day-1" },
-    { value: "Day-2", label: "Day-2" },
-    { value: "Day-3", label: "Day-3" },
-    { value: "Day-4", label: "Day-4" },
-    { value: "Day-5", label: "Day-5" },
-  ];
 
   return (
     <div className="w-full flex flex-col justify-start items-start sm:gap-10 gap-4 overflow-hidden">
@@ -150,32 +70,7 @@ const Dashboard = () => {
         <CallDropRate dashboardData={dashboardData} isLoading={loading} />
       </div>
 
-      <div className="w-full flex xl:flex-row flex-col justify-between items-start sm:gap-10 gap-4">
-        <div className="w-full sm:h-[600px] flex flex-col sm:gap-10 gap-4 bg-white shadow rounded-lg p-4">
-          <div className="w-full flex sm:flex-row flex-col sm:justify-between justify-start sm:items-center gap-3 items-start">
-            <div className="w-full flex gap-4 items-center">
-              <h2 className="sm:text-2xl xs:text-xl text-lg text-[#161C24] font-semibold">
-                User Performance
-              </h2>
-              <p className="xs:text-sm text-xs text-[#1FCB4F]">8.06%</p>
-              <div className="w-7 h-7 bg-[#3EC65D] rounded-full p-1">
-                <MdOutlineCallMissedOutgoing size={20} />
-              </div>
-            </div>
-            <Select
-              placeholder="Select a day"
-              options={dropdownOptions}
-              optionFilterProp="label"
-              className="min-w-[152px]"
-              showSearch
-              allowClear
-            />
-          </div>
-          <div className="w-full h-full sm:mb-6">
-            <Line data={data} options={chartOptions} />
-          </div>
-        </div>
-      </div>
+      <UserPerformanceChart performanceData={userPerformanceData} />
     </div>
   );
 };

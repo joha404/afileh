@@ -27,7 +27,10 @@ function CallDuration({ dashboardData, isLoading }) {
       },
     ],
   };
+  const totalMinutesDecimal = dashboardData?.total_call_duration || 0;
 
+  const minutes = Math.floor(totalMinutesDecimal);
+  const seconds = Math.round((totalMinutesDecimal - minutes) * 60);
   return (
     <div>
       <div className="w-full rounded-lg shadow bg-white">

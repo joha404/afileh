@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { CiLock } from "react-icons/ci";
 import AssignmentLevel from "@/components/Asssignment/AssignmentLevel";
 import { getAllAssignment } from "@/components/api/assignment";
+import LockedModule from "@/components/Asssignment/LockedModule";
 
 const SkeletonCard = () => (
   <div className="w-full flex flex-col gap-5 justify-start items-start rounded-xl sm:p-5 p-3 bg-[#EEF2F5] animate-pulse">
@@ -23,15 +23,7 @@ const SkeletonCard = () => (
 );
 
 const Assignment = () => {
-  const [assistantInfo, setAssistantInfo] = useState([]);
-  const [levelups, setLevelups] = useState([
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-  ]);
+  const [assistantInfo, setAssistantInfo] = useState(null);
 
   const fetchAssignment = async () => {
     try {
@@ -39,6 +31,7 @@ const Assignment = () => {
       setAssistantInfo(res.data);
     } catch (error) {
       console.error("Error fetching assignments:", error);
+      setAssistantInfo([]);
     }
   };
 
@@ -46,69 +39,52 @@ const Assignment = () => {
     fetchAssignment();
   }, []);
 
-  const handleLevelUp = (index) => {
-    const updated = [...levelups];
-    updated[index] = true;
-    setLevelups(updated);
-  };
+  if (!assistantInfo) {
+    // Loading state
+    return (
+      <>
+        <SkeletonCard />
+        <SkeletonCard />
+        <SkeletonCard />
+      </>
+    );
+  }
 
-  const isModule2Unlocked = levelups.slice(0, 3).every((lvl) => lvl === true);
+  // Filter helpers: convert string "true"/"false" to boolean
+  const isUnlocked = (val) =>
+    val === true || val === "true" || val === 1 || val === "1";
 
-  const module1 = assistantInfo.slice(0, 3);
-  const module2 = assistantInfo.slice(3, 6);
+  // Partition assistants by unlocked state (handle strings/booleans)
+  const module1 = assistantInfo.filter((assistant) =>
+    isUnlocked(assistant.unlocked)
+  );
+  const module2 = assistantInfo.filter(
+    (assistant) => !isUnlocked(assistant.unlocked)
+  );
+
+  const isModule2Unlocked = module1.length > 0;
 
   return (
     <>
       {/* Module 1 */}
       <div>
         <h1 className="text-2xl mb-4 text-left font-semibold">Module 1</h1>
-        {assistantInfo.length === 0 ? (
-          <>
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
-          </>
+        {module1.length === 0 ? (
+          <p className="text-gray-500">No unlocked assistants available.</p>
         ) : (
-          module1.map((assistant, index) => (
-            <AssignmentLevel
-              key={assistant.id}
-              assistantInfo={assistant}
-              setLevelup={() => handleLevelUp(index)}
-            />
+          module1.map((assistant) => (
+            <AssignmentLevel key={assistant.id} assistantInfo={assistant} />
           ))
         )}
       </div>
 
       {/* Module 2 */}
       <h1 className="text-2xl mt-8 mb-4 font-semibold text-left">Module 2</h1>
-      <div
-        className={`relative mt-10 rounded-lg overflow-hidden ${
-          !isModule2Unlocked ? "select-none pointer-events-none opacity-50" : ""
-        }`}
-      >
-        {!isModule2Unlocked && (
-          <div className="absolute inset-0 z-10 bg-black/20 backdrop-blur-sm flex justify-center items-center">
-            <CiLock size={32} className="text-white" />
-          </div>
-        )}
-        <div className="relative z-0">
-          {!assistantInfo.length < 0 ? (
-            <>
-              <SkeletonCard />
-              <SkeletonCard />
-              <SkeletonCard />
-            </>
-          ) : (
-            module2.map((assistant, index) => (
-              <AssignmentLevel
-                key={assistant.id}
-                assistantInfo={assistant}
-                setLevelup={() => handleLevelUp(index + 3)}
-              />
-            ))
-          )}
-        </div>
-      </div>
+      <LockedModule
+        isLocked={!isModule2Unlocked}
+        module2={module2}
+        AssignmentLevel={AssignmentLevel}
+      />
     </>
   );
 };
