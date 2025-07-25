@@ -10,12 +10,12 @@ const ActiveCallDetail = ({ volumeLevel, onEndCallClick }) => {
         {/* <AssistantSpeechIndicator isSpeaking={assistantIsSpeaking} /> */}
         <VolumeLevel volume={volumeLevel} />
       </div>
-      <div className="flex gap-4 justify-between -mt-8">
+      <div className="flex justify-center -mt-8">
         <div
-          className="mt-4 text-center cursor-pointer h-14 w-14 bg-red-600 rounded-full flex justify-center items-center text-white text-2xl hover:bg-red-800"
           onClick={onEndCallClick}
+          className="mt-4 px-6 py-3 bg-red-600 hover:bg-red-700 text-white text-lg font-semibold rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 text-center inline-flex items-center justify-center cursor-pointer"
         >
-          <MdCallEnd />
+          End Call
         </div>
       </div>
     </div>
