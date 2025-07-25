@@ -116,7 +116,7 @@ const AICaller = () => {
         <div className="fixed inset-0 z-10 bg-black/60 flex justify-center items-center">
           <div className="bg-white p-8 rounded-2xl sm:w-[90%] lg:w-[30%]">
             <VapiIntegration
-              assistantInfo={assistantInfo.ai_assistant_id}
+              assistantId={assistantInfo.ai_assistant_id}
               onClose={handleCallClose}
               isSubmitted={isSubmitted}
               callDurationLimit={assistantInfo.free_call_time * 60 * 1000}

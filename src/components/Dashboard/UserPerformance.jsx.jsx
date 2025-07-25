@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Line } from "react-chartjs-2";
 import { MdOutlineCallMissedOutgoing } from "react-icons/md";
 import { Select } from "antd";
@@ -23,7 +23,6 @@ ChartJS.register(
   Filler
 );
 
-// Create gradient background
 const createGradient = (ctx, chartArea) => {
   const gradient = ctx.createLinearGradient(
     0,
@@ -37,16 +36,26 @@ const createGradient = (ctx, chartArea) => {
 };
 
 const UserPerformanceChart = ({ performanceData = [] }) => {
+  const [selectedDay, setSelectedDay] = useState("All");
+
   const dropdownOptions = [
+    { value: "All", label: "All Time" },
     { value: "Day-1", label: "Day-1" },
     { value: "Day-2", label: "Day-2" },
     { value: "Day-3", label: "Day-3" },
     { value: "Day-4", label: "Day-4" },
     { value: "Day-5", label: "Day-5" },
+    { value: "Day-6", label: "Day-6" },
+    { value: "Day-7", label: "Day-7" },
   ];
 
-  const labels = performanceData.map((item) => item.date);
-  const values = performanceData.map((item) => item.average_marks);
+  const filteredData =
+    selectedDay && selectedDay !== "All"
+      ? performanceData.filter((item) => item.day === selectedDay)
+      : performanceData;
+
+  const labels = filteredData.map((item) => item.date);
+  const values = filteredData.map((item) => item.average_marks);
 
   const data = {
     labels,
@@ -113,11 +122,13 @@ const UserPerformanceChart = ({ performanceData = [] }) => {
             className="min-w-[152px]"
             showSearch
             allowClear
+            onChange={(value) => setSelectedDay(value)}
+            value={selectedDay}
           />
         </div>
 
         <div className="w-full h-full sm:mb-6">
-          {performanceData.length === 0 ? (
+          {filteredData.length === 0 ? (
             <p className="text-center text-gray-500">No data available.</p>
           ) : (
             <Line data={data} options={chartOptions} />

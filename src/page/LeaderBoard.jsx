@@ -40,8 +40,6 @@ const LeaderBoard = () => {
     try {
       const res = await getLeaderBoard();
       const data = res.data;
-      console.log(data);
-
       setTopLearners(data.top_learners || []);
       setOtherLearners(data.other_learners || []);
       setCurrentUser(data.you || null);

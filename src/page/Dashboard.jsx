@@ -1,4 +1,3 @@
-import { MdOutlineCallMissedOutgoing } from "react-icons/md";
 import {
   Chart as ChartJS,
   ArcElement,
@@ -32,18 +31,6 @@ const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState({});
   const [loading, setLoading] = useState(true);
   const [userPerformanceData, setUserPerformanceData] = useState([]); // ✅ corrected
-
-  const calculateTime = (totalMinutes) => {
-    const totalSeconds = totalMinutes * 60;
-    const weeks = totalSeconds / (7 * 24 * 3600);
-    const days = totalSeconds / (24 * 3600);
-    const hours = totalSeconds / 3600;
-
-    if (weeks >= 1) return `${weeks.toFixed(2)} weeks`;
-    if (days >= 1) return `${days.toFixed(2)} days`;
-    if (hours >= 1) return `${hours.toFixed(2)} hours`;
-    return `${totalMinutes.toFixed(2)} minutes`;
-  };
 
   useEffect(() => {
     const fetchData = async () => {
